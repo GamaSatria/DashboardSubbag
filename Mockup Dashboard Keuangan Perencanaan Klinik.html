@@ -225,6 +225,17 @@ table.t .pill{white-space:normal;border-radius:12px;line-height:1.3}
 .ev2.cr{margin-right:0;border-top-right-radius:0;border-bottom-right-radius:0}
 .ev2 .rng{font-weight:600;margin-left:6px}
 
+/* klinik: kontrol stok dan popup */
+.kstep{display:flex;align-items:center;gap:6px}
+.kbtn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:1.5px solid var(--field);border-radius:8px;background:#fff;color:var(--ink);font-size:20px;font-weight:700;line-height:1;cursor:pointer}
+.kbtn:hover{background:var(--accT);border-color:var(--acc)}
+.kbtn[disabled]{opacity:.4;cursor:not-allowed}
+.kseg button{flex:1 1 0}
+.kprev{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:12px 14px;border-radius:10px;background:var(--accT);color:var(--ink);font-size:15px}
+.krow{display:grid;grid-template-columns:minmax(0,1fr) 84px 44px;gap:8px;align-items:center}
+.krow select,.krow input{width:100%;min-width:0;min-height:44px;padding:0 10px;border:1.5px solid var(--field);border-radius:8px;background:#fff;font-size:16px}
+.krow .kbtn{width:44px;height:44px}
+
 @media (max-width:900px){
   .navbar{position:static}
   .menu a.adm{margin-left:0}
@@ -450,6 +461,17 @@ table.t .pill{white-space:normal;border-radius:12px;line-height:1.3}
   .modal table.t td input{width:100%!important;min-width:0;padding:0 4px}
 
   .toast{right:16px;bottom:16px;left:16px;transform:none;text-align:center;font-size:15px}
+
+  /* klinik */
+  table.t.t-card td.c-act .kstep{display:grid;grid-template-columns:52px 52px minmax(0,1fr);gap:8px}
+  table.t.t-card td.c-act .kbtn{width:100%;height:44px}
+  table.t.t-card td.c-act .kstep .btn{min-height:44px}
+  .kseg{flex-wrap:nowrap;overflow:visible}
+  .kseg button{flex:1 1 0;padding:0 6px}
+  .kprev{font-size:14px}
+  .krow{grid-template-columns:minmax(0,1fr) 62px 44px;gap:6px}
+  .krow select{padding:0 6px;font-size:14.5px}
+  .modal .kacts{position:sticky;bottom:0;z-index:2;margin-bottom:calc(-16px - env(safe-area-inset-bottom));padding:10px 0 calc(16px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line2)}
 }
 @media (max-width:360px){
   .kpi .v{font-size:20px}
@@ -2021,10 +2043,10 @@ function vKln(){
   return shell('kln','',KLN_MENU(), `
   ${heading('Klinik pegawai','Dashboard Kunjungan Klinik', isAdmin()?'<button class="btn p" data-act="kunjungan">Catat kunjungan</button>':'')}
   <div class="grid g4">
-    <div class="card kpi"><div class="l">Kunjungan hari ini</div><div class="v">1</div><div class="n">Rabu, 28 Okt</div></div>
+    <div class="card kpi"><div class="l">Kunjungan hari ini</div><div class="v">${KUNJ.filter(k=>k[0].startsWith(TODAY.getDate()+' '+BULAN[TODAY.getMonth()]+',')).length}</div><div class="n">Rabu, 28 Okt</div></div>
     <div class="card kpi"><div class="l">Kunjungan Oktober</div><div class="v">${KUNJ_BLN[9]}</div><div class="n">September: ${KUNJ_BLN[8]}</div></div>
     <div class="card kpi"><div class="l">Obat menipis / habis</div><div class="v" style="color:var(--bad)">${OBAT.filter(o=>o[1]<o[3]).length}</div><div class="n">di bawah stok minimum</div></div>
-    <div class="card kpi"><div class="l">Kedaluwarsa ≤ 60 hari</div><div class="v">2</div><div class="n">segera digunakan / diganti</div></div>
+    <div class="card kpi"><div class="l">Kedaluwarsa ≤ 60 hari</div><div class="v">${OBAT.filter(expSoon).length}</div><div class="n">segera digunakan / diganti</div></div>
   </div>
   <div class="row sec">
     <div class="card" style="flex:3 1 460px;min-width:0"><h2>Kunjungan per bulan · 2026</h2>
@@ -2035,24 +2057,247 @@ function vKln(){
       <div class="hint">Oktober masih berjalan.</div>
     </div>
     <div class="card" style="flex:2 1 300px;min-width:0"><h2>Keluhan terbanyak · Oktober</h2>
-      ${[['Sakit kepala',9],['Flu / batuk',8],['Cek tensi',6],['Maag',5],['Pegal / nyeri otot',4]].map(([n,v])=>`<div class="ubar" style="display:grid;grid-template-columns:165px 1fr 32px;gap:10px;align-items:center;margin-bottom:12px"><span>${n}</span><span class="bar"><i style="width:${v/9*100}%"></i></span><b class="num" style="text-align:right">${v}</b></div>`).join('')}
+      ${(()=>{ const top = [...KLN.keluhan].sort((a,b)=>b[1]-a[1]).slice(0,5), mx = top[0][1]; return top.map(([n,v])=>`<div class="ubar" style="display:grid;grid-template-columns:165px 1fr 32px;gap:10px;align-items:center;margin-bottom:12px"><span>${esc(n)}</span><span class="bar"><i style="width:${v/mx*100}%"></i></span><b class="num" style="text-align:right">${v}</b></div>`).join(''); })()}
     </div>
   </div>
   <div class="sec"><h2>Kunjungan terbaru</h2>
   ${showDetail?`<div class="tbox"><table class="t" style="min-width:680px"><thead><tr><th>Waktu</th><th>Pegawai</th><th>Unit</th><th>Keluhan</th><th>Obat / tindakan</th></tr></thead><tbody>
-    ${KUNJ.map(k=>`<tr><td class="num">${k[0]}</td><td><b>${k[1]}</b></td><td>${k[2]}</td><td>${k[3]}</td><td>${k[4]}</td></tr>`).join('')}</tbody></table></div>
+    ${KUNJ.map(k=>`<tr><td class="num">${k[0]}${k[6]?' <span class="pill info">Baru</span>':''}</td><td><b>${esc(k[1])}</b></td><td>${esc(k[2])}</td><td>${esc(k[3])}${k[5]?`<div class="sm">${esc(k[5])}</div>`:''}</td><td>${esc(k[4])}</td></tr>`).join('')}</tbody></table></div>
     <p class="sm" style="margin-top:8px">Nama ditampilkan inisial. Detail lengkap hanya untuk petugas klinik.</p>`
   :`<div class="alert info">${svgInfo}<span>Data kesehatan bersifat pribadi. Selain petugas klinik, akun hanya melihat rekap jumlah kunjungan dan keluhan, tanpa nama pegawai.</span></div>`}
   </div>`);
 }
+/* ---------- stok obat: data & bantuan ---------- */
+const KLN = {
+  q:'', st:'all', asIdx:0, asMode:'masuk',
+  keluhan:[['Sakit kepala',9],['Flu / batuk',8],['Cek tensi',6],['Maag',5],['Pegal / nyeri otot',4]],
+  log:[
+    {t:'28 Okt, 09.15', o:'Paracetamol 500 mg', u:'tablet', j:'Keluar', n:-2, s:240, k:'Diberikan saat kunjungan'},
+    {t:'24 Okt, 09.30', o:'Antasida', u:'tablet', j:'Keluar', n:-2, s:36, k:'Diberikan saat kunjungan'},
+    {t:'22 Okt, 08.50', o:'Obat batuk sirup', u:'botol', j:'Keluar', n:-1, s:4, k:'Diberikan saat kunjungan'},
+    {t:'20 Okt, 11.00', o:'Paracetamol 500 mg', u:'tablet', j:'Masuk', n:100, s:242, k:'Pengadaan BMN · BAST/112/X/2026'},
+    {t:'15 Okt, 10.00', o:'Plester luka', u:'pak', j:'Keluar', n:-1, s:0, k:'Pemakaian ruang klinik'}
+  ]
+};
+const SATUAN = ['tablet','kapsul','botol','sachet','pak','tube','strip'];
+const KELUHAN_OPSI = ['Sakit kepala','Flu / batuk','Cek tensi','Maag','Pegal / nyeri otot','Demam','Luka ringan'];
+const SUMBER_MASUK = ['Pengadaan BMN','Hibah / bantuan','Pengembalian dari unit'];
+const AS_MODE = {
+  masuk:{l:'Masuk', q:'Jumlah masuk', r:SUMBER_MASUK},
+  keluar:{l:'Keluar', q:'Jumlah keluar', r:['Diberikan ke pegawai','Rusak','Kedaluwarsa dimusnahkan']},
+  koreksi:{l:'Koreksi', q:'Jumlah stok fisik', r:['Hasil stock opname','Salah catat']}
+};
+const klnClock = () => { const n = new Date(); return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); };
+const klnStamp = (date, time) => { const d = D(date); return `${d.getDate()} ${BULAN[d.getMonth()]}, ${time.replace(':','.')}`; };
+const ymToExp = v => { const [y, m] = v.split('-'); return `${BULAN[Number(m)-1]} ${y}`; };
+const expToYm = e => { const [b, y] = String(e).split(' '), m = BULAN.indexOf(b); return m < 0 ? '' : `${y}-${String(m+1).padStart(2,'0')}`; };
+function expMonths(o){ const [b, y] = String(o[4]).split(' '), m = BULAN.indexOf(b); return m < 0 ? null : (Number(y)-TODAY.getFullYear())*12 + m - TODAY.getMonth(); }
+const expSoon = o => { const e = expMonths(o); return e != null && e >= 0 && e <= 2; };
+function obatStatus(o){
+  const e = expMonths(o);
+  if(e != null && e < 0) return ['Kedaluwarsa','bad'];
+  return o[1] === 0 ? ['Habis','bad'] : o[1] < o[3] ? ['Menipis','warn'] : expSoon(o) ? ['Segera kedaluwarsa','warn'] : ['Aman','ok'];
+}
+function mutasiObat(i, delta, jenis, ket, waktu){
+  const o = OBAT[i];
+  o[1] = Math.max(0, o[1] + delta);
+  KLN.log.unshift({t: waktu || klnStamp(iso(TODAY), klnClock()), o:o[0], u:o[2], j:jenis, n:delta, s:o[1], k:ket});
+}
+const stokToast = (o, before) => toast(`${o[0]}: stok ${before} → ${o[1]} ${o[2]}${o[1] < o[3] ? ' · di bawah minimum' : ''}`);
+
 function vKlnObat(){
+  const adm = isAdmin(), {q, st} = KLN;
+  const list = OBAT.map((o,i) => ({o, i, s:obatStatus(o)})).filter(x => (!q || x.o[0].toLowerCase().includes(q.toLowerCase())) && (st === 'all' || x.s[0] === st));
+  const log = KLN.log.slice(0,8), jenisPill = {Masuk:'ok', Keluar:'warn', Koreksi:'info'};
   return shell('kln','obat',KLN_MENU(), `
-  ${heading('Persediaan obat klinik','Stok Obat', isAdmin()?'<button class="btn p" data-act="toastOnly" data-msg="Form penambahan stok dibuka (mockup)">Tambah stok masuk</button>':'')}
-  <div class="tbox"><table class="t" style="min-width:760px"><thead><tr><th>Obat</th><th class="r">Stok</th><th class="r">Minimum</th><th style="width:200px">Ketersediaan</th><th>Kedaluwarsa</th><th>Status</th></tr></thead><tbody>
-  ${OBAT.map(o=>{ const st = o[1]===0?['Habis','bad']:o[1]<o[3]?['Menipis','warn']:(o[4]==='Nov 2026'||o[4]==='Des 2026')?['Segera kedaluwarsa','warn']:['Aman','ok']; const w = Math.min(100, o[1]/(o[3]*3)*100);
-    return `<tr><td><b>${o[0]}</b></td><td class="r num">${o[1]} ${o[2]}</td><td class="r num">${o[3]}</td><td><div class="bar"><i style="width:${w}%;background:${st[1]==='ok'?'var(--acc)':st[1]==='bad'?'#A61B1B':'#E08A1E'}"></i></div></td><td>${o[4]}</td><td><span class="pill ${st[1]}">${st[0]}</span></td></tr>`; }).join('')}
+  ${heading('Persediaan obat klinik','Stok Obat', adm?'<button class="btn p" data-act="stokMasuk">Tambah stok masuk</button>':'')}
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card kpi"><div class="l">Jenis obat</div><div class="v">${OBAT.length}</div><div class="n">tercatat di klinik</div></div>
+    <div class="card kpi"><div class="l">Menipis</div><div class="v" style="color:#9A4A07">${OBAT.filter(o=>o[1]>0&&o[1]<o[3]).length}</div><div class="n">di bawah stok minimum</div></div>
+    <div class="card kpi"><div class="l">Habis</div><div class="v" style="color:var(--bad)">${OBAT.filter(o=>o[1]===0).length}</div><div class="n">perlu segera diadakan</div></div>
+    <div class="card kpi"><div class="l">Kedaluwarsa ≤ 60 hari</div><div class="v">${OBAT.filter(expSoon).length}</div><div class="n">segera digunakan / diganti</div></div>
+  </div>
+  <div class="tools">
+    <label class="f" style="flex:1 1 260px">Cari obat<input type="search" data-act="oQ" value="${esc(q)}" placeholder="Nama obat"></label>
+    <label class="f">Status<select data-act="oSt"><option value="all">Semua status</option>${['Aman','Menipis','Habis','Segera kedaluwarsa','Kedaluwarsa'].map(s=>`<option ${st===s?'selected':''}>${s}</option>`).join('')}</select></label>
+    ${(q||st!=='all')?'<button class="btn" data-act="oReset">Reset filter</button>':''}
+  </div>
+  <div class="tbox"><table class="t" style="min-width:${adm?940:760}px"><thead><tr><th>Obat</th><th class="r">Stok</th><th class="r">Minimum</th><th style="width:180px">Ketersediaan</th><th>Kedaluwarsa</th><th>Status</th>${adm?'<th>Aksi</th>':''}</tr></thead><tbody>
+  ${list.length ? list.map(({o,i,s}) => { const w = Math.min(100, o[1]/((o[3]||1)*3)*100);
+    return `<tr><td><b>${esc(o[0])}</b></td><td class="r num">${o[1]} ${esc(o[2])}</td><td class="r num">${o[3]}</td><td><div class="bar"><i style="width:${w}%;background:${s[1]==='ok'?'var(--acc)':s[1]==='bad'?'#A61B1B':'#E08A1E'}"></i></div></td><td>${esc(o[4])}</td><td><span class="pill ${s[1]}">${s[0]}</span></td>${adm?`<td><div class="kstep"><button type="button" class="kbtn" data-act="oDec" data-i="${i}" aria-label="Kurangi 1 ${esc(o[0])}" ${o[1]===0?'disabled':''}>−</button><button type="button" class="kbtn" data-act="oInc" data-i="${i}" aria-label="Tambah 1 ${esc(o[0])}">+</button><button type="button" class="btn sm edit" data-act="oAtur" data-i="${i}">Atur</button></div></td>`:''}</tr>`; }).join('')
+  : `<tr><td colspan="${adm?7:6}" style="text-align:center;padding:28px;color:var(--mute)">Tidak ada obat yang cocok dengan filter.</td></tr>`}
   </tbody></table></div>
-  <p class="sm" style="margin-top:10px">Obat yang menipis otomatis masuk daftar usulan pengadaan ke BMN.</p>`);
+  <p class="sm" style="margin-top:10px">${adm?'Tombol − dan + mengubah stok satu per satu. Gunakan <b>Atur</b> untuk jumlah besar, stock opname, stok minimum, dan tanggal kedaluwarsa. ':''}Obat yang menipis otomatis masuk daftar usulan pengadaan ke BMN.</p>
+  <div class="sec"><h2>Riwayat mutasi stok</h2>
+  <div class="tbox"><table class="t" style="min-width:760px"><thead><tr><th>Waktu</th><th>Obat</th><th>Jenis</th><th class="r">Jumlah</th><th class="r">Stok akhir</th><th>Keterangan</th></tr></thead><tbody>
+    ${log.map(l => `<tr><td class="num" style="white-space:nowrap">${esc(l.t)}</td><td><b>${esc(l.o)}</b></td><td><span class="pill ${jenisPill[l.j]}">${l.j}</span></td><td class="r num"><b style="color:${l.n>0?'var(--ok)':'var(--bad)'}">${l.n>0?'+':'−'}${Math.abs(l.n)}</b> ${esc(l.u)}</td><td class="r num">${l.s} ${esc(l.u)}</td><td>${esc(l.k)}</td></tr>`).join('')}
+  </tbody></table></div></div>`);
+}
+
+/* ---------- popup klinik ---------- */
+function klnModal(id, judul, sub, isi, tombol){
+  $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><form class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" onsubmit="return false" style="max-width:600px">
+    <h3 id="mt">${judul}</h3>${sub ? `<div class="sm" style="margin-top:-8px">${sub}</div>` : ''}
+    ${isi}
+    <div class="acts kacts" style="justify-content:flex-end"><button type="button" class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="${id}">${tombol}</button></div>
+  </form></div>`;
+  if(!isPhone()){ const f = document.querySelector('#modal input:not([disabled]),#modal select'); if(f) f.focus(); }
+}
+const dua = isi => `<div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">${isi}</div>`;
+
+function stokMasukModal(){
+  klnModal('smSave', 'Tambah stok masuk', 'Catat obat yang diterima klinik. Stok langsung bertambah setelah disimpan.', `
+    <label class="f">Obat<select id="smO" data-act="smLive">${OBAT.map((o,i)=>`<option value="${i}">${esc(o[0])} · sisa ${o[1]} ${esc(o[2])}</option>`).join('')}<option value="new">+ Obat baru</option></select></label>
+    <div id="smNew" class="hide" style="display:flex;flex-direction:column;gap:10px">
+      <label class="f">Nama obat<input id="smN" placeholder="mis. Betadine 15 ml"></label>
+      ${dua(`<label class="f">Satuan<select id="smU" data-act="smLive">${SATUAN.map(s=>`<option>${s}</option>`).join('')}</select></label><label class="f">Stok minimum<input id="smM" class="num" type="number" min="0" inputmode="numeric" value="5"></label>`)}
+    </div>
+    ${dua(`<label class="f">Jumlah masuk<input id="smQ" data-act="smLive" class="num" type="number" min="1" inputmode="numeric" placeholder="0"></label><label class="f">Tanggal masuk<input id="smD" type="date" min="2026-01-01" max="${iso(TODAY)}" value="${iso(TODAY)}"></label>`)}
+    ${dua(`<label class="f">Kedaluwarsa batch ini<input id="smE" type="month" value="${expToYm(OBAT[0][4])}"></label><label class="f">Sumber<select id="smS">${SUMBER_MASUK.map(s=>`<option>${s}</option>`).join('')}</select></label>`)}
+    <label class="f">No. dokumen / BAST (opsional)<input id="smB" placeholder="mis. BAST/120/X/2026"></label>
+    <div class="kprev" id="smPrev" aria-live="polite"></div>`, 'Simpan stok masuk');
+  smPreview();
+}
+function smPreview(){
+  const v = $('#smO').value, isNew = v === 'new', q = Math.max(0, parseInt($('#smQ').value, 10) || 0);
+  $('#smNew').classList.toggle('hide', !isNew);
+  const o = isNew ? null : OBAT[Number(v)], cur = o ? o[1] : 0, u = esc(o ? o[2] : $('#smU').value);
+  $('#smPrev').innerHTML = `<span>Stok sekarang <b>${cur} ${u}</b></span><span>Setelah masuk <b>${cur+q} ${u}</b></span>`;
+}
+function smSave(){
+  const v = $('#smO').value, isNew = v === 'new', q = parseInt($('#smQ').value, 10), date = $('#smD').value;
+  if(!(q >= 1)){ toast('Isi jumlah masuk minimal 1'); $('#smQ').focus(); return; }
+  if(!date){ toast('Isi tanggal masuk'); $('#smD').focus(); return; }
+  const ex = $('#smE').value ? ymToExp($('#smE').value) : '—', bast = $('#smB').value.trim();
+  let i = Number(v);
+  if(isNew){
+    const nama = $('#smN').value.trim(), min = parseInt($('#smM').value, 10);
+    if(!nama){ toast('Nama obat wajib diisi'); $('#smN').focus(); return; }
+    if(OBAT.some(o => o[0].toLowerCase() === nama.toLowerCase())){ toast('Obat ini sudah ada di daftar'); $('#smN').focus(); return; }
+    if(!(min >= 0)){ toast('Stok minimum tidak valid'); $('#smM').focus(); return; }
+    OBAT.push([nama, 0, $('#smU').value, min, ex]); i = OBAT.length - 1;
+  } else OBAT[i][4] = ex;
+  const o = OBAT[i], before = o[1];
+  mutasiObat(i, q, 'Masuk', $('#smS').value + (bast ? ' · ' + bast : ''), klnStamp(date, klnClock()));
+  closeModal(); rerender(); stokToast(o, before);
+}
+
+function aturStokModal(i){
+  const o = OBAT[i]; KLN.asIdx = i; KLN.asMode = 'masuk';
+  klnModal('asSave', 'Atur stok · ' + esc(o[0]), `Stok sekarang ${o[1]} ${esc(o[2])}`, `
+    <div class="seg kseg" role="group" aria-label="Jenis perubahan">${Object.entries(AS_MODE).map(([k,m]) => `<button type="button" data-act="asMode" data-m="${k}" class="${k==='masuk'?'on':''}">${m.l}</button>`).join('')}</div>
+    ${dua(`<label class="f"><span id="asQL">Jumlah masuk</span><input id="asQ" data-act="asLive" class="num" type="number" min="0" inputmode="numeric" placeholder="0"></label><label class="f">Alasan<select id="asR"></select></label>`)}
+    <div class="kprev" id="asPrev" aria-live="polite"></div>
+    ${dua(`<label class="f">Stok minimum<input id="asMin" class="num" type="number" min="0" inputmode="numeric" value="${o[3]}"></label><label class="f">Kedaluwarsa<input id="asE" type="month" value="${expToYm(o[4])}"></label>`)}`, 'Simpan perubahan');
+  asSwitch('masuk');
+}
+function asSwitch(m){
+  KLN.asMode = m;
+  document.querySelectorAll('[data-act="asMode"]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  $('#asQL').textContent = AS_MODE[m].q;
+  $('#asR').innerHTML = AS_MODE[m].r.map(r => `<option>${r}</option>`).join('');
+  $('#asQ').value = '';
+  asPreview();
+}
+function asTarget(){
+  const o = OBAT[KLN.asIdx], q = parseInt($('#asQ').value, 10);
+  if(isNaN(q)) return o[1];
+  return KLN.asMode === 'masuk' ? o[1] + q : KLN.asMode === 'keluar' ? o[1] - q : q;
+}
+function asPreview(){
+  const o = OBAT[KLN.asIdx], t = asTarget(), u = esc(o[2]);
+  $('#asPrev').innerHTML = `<span>Stok sekarang <b>${o[1]} ${u}</b></span><span>Setelah disimpan <b style="${t<0?'color:var(--bad)':''}">${t<0?'stok tidak cukup':t+' '+u}</b></span>`;
+}
+function asSave(){
+  const i = KLN.asIdx, o = OBAT[i], m = KLN.asMode, raw = $('#asQ').value.trim(), q = parseInt(raw, 10), min = parseInt($('#asMin').value, 10);
+  const ex = $('#asE').value ? ymToExp($('#asE').value) : '—';
+  if(!(min >= 0)){ toast('Stok minimum tidak valid'); $('#asMin').focus(); return; }
+  let delta = 0;
+  if(raw !== ''){
+    if(isNaN(q) || q < 0 || (m !== 'koreksi' && q < 1)){ toast('Jumlah tidak valid'); $('#asQ').focus(); return; }
+    if(m === 'keluar' && q > o[1]){ toast(`Stok hanya tersisa ${o[1]} ${o[2]}`); $('#asQ').focus(); return; }
+    delta = m === 'masuk' ? q : m === 'keluar' ? -q : q - o[1];
+  }
+  const meta = min !== o[3] || ex !== o[4];
+  if(!delta && !meta){ toast('Isi jumlah atau ubah data obat terlebih dahulu'); $('#asQ').focus(); return; }
+  const before = o[1], alasan = $('#asR').value;
+  o[3] = min; o[4] = ex;
+  if(delta) mutasiObat(i, delta, AS_MODE[m].l, alasan);
+  closeModal(); rerender();
+  if(delta) stokToast(o, before); else toast(`Data ${o[0]} diperbarui`);
+}
+
+/* catat kunjungan */
+const klnUnits = () => [...TIMKER_KEYS.map(k => 'Timker ' + UNIT_META[k].s), ...URUSAN_KEYS.map(k => UNIT_META[k].s)];
+function vRowHtml(){
+  const dipakai = [...document.querySelectorAll('.vO')].map(s => Number(s.value));
+  const pilih = OBAT.findIndex((o,i) => o[1] > 0 && !dipakai.includes(i));
+  return `<div class="krow"><select class="vO" aria-label="Obat">${OBAT.map((o,i)=>`<option value="${i}" ${o[1]===0?'disabled':''} ${i===pilih?'selected':''}>${esc(o[0])} · sisa ${o[1]} ${esc(o[2])}</option>`).join('')}</select><input class="vQ num" type="number" min="1" inputmode="numeric" value="1" aria-label="Jumlah"><button type="button" class="kbtn" data-act="vDel" aria-label="Hapus obat ini">×</button></div>`;
+}
+function kunjunganModal(){
+  klnModal('vSave', 'Catat kunjungan', 'Nama ditampilkan sebagai inisial di daftar. Obat yang diberikan otomatis mengurangi stok.', `
+    ${dua(`<label class="f">Tanggal<input id="vT" type="date" min="2026-01-01" max="${iso(TODAY)}" value="${iso(TODAY)}"></label><label class="f">Jam<input id="vJ" type="time" value="${klnClock()}"></label>`)}
+    <label class="f">Nama pegawai<input id="vN" placeholder="Tulis nama lengkap" autocomplete="off"></label>
+    <label class="f">Unit<select id="vU">${klnUnits().map(u=>`<option>${esc(u)}</option>`).join('')}</select></label>
+    <label class="f">Keluhan<select id="vK" data-act="vLive">${KELUHAN_OPSI.map(k=>`<option>${esc(k)}</option>`).join('')}<option value="lain">Lainnya</option></select></label>
+    <label class="f hide" id="vKLWrap">Tulis keluhan<input id="vKL" placeholder="mis. Sakit gigi"></label>
+    ${dua(`<label class="f">Tensi (opsional)<input id="vTs" placeholder="120/80"></label><label class="f">Suhu °C (opsional)<input id="vS" inputmode="decimal" placeholder="36,5"></label>`)}
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="f">Obat yang diberikan</div>
+      <div id="vRows" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button type="button" class="btn sm" data-act="vAdd" style="align-self:flex-start">+ Tambah obat</button>
+    </div>
+    <label class="f">Tindakan / catatan (opsional)<input id="vC" placeholder="mis. istirahat 30 menit"></label>`, 'Simpan kunjungan');
+}
+function vSave(){
+  const date = $('#vT').value, jam = $('#vJ').value, nama = $('#vN').value.trim(), lain = $('#vK').value === 'lain', kel = lain ? $('#vKL').value.trim() : $('#vK').value;
+  if(!date){ toast('Isi tanggal kunjungan'); $('#vT').focus(); return; }
+  if(!jam){ toast('Isi jam kunjungan'); $('#vJ').focus(); return; }
+  if(!nama){ toast('Nama pegawai wajib diisi'); $('#vN').focus(); return; }
+  if(!kel){ toast('Tulis keluhan pegawai'); $('#vKL').focus(); return; }
+  const pakai = new Map();
+  for(const row of document.querySelectorAll('#vRows .krow')){
+    const i = Number(row.querySelector('.vO').value), q = parseInt(row.querySelector('.vQ').value, 10);
+    if(!(q >= 1)){ toast('Jumlah obat minimal 1'); row.querySelector('.vQ').focus(); return; }
+    pakai.set(i, (pakai.get(i) || 0) + q);
+  }
+  for(const [i, q] of pakai) if(q > OBAT[i][1]){ toast(`Stok ${OBAT[i][0]} hanya tersisa ${OBAT[i][1]} ${OBAT[i][2]}`); return; }
+  const stamp = klnStamp(date, jam), inisial = nama.split(/\s+/).slice(0,2).map(w => w[0].toUpperCase() + '.').join('');
+  const tensi = $('#vTs').value.trim(), suhu = $('#vS').value.trim(), cat = $('#vC').value.trim();
+  const obatTeks = [...pakai].map(([i, q]) => `${OBAT[i][0]} ${q} ${OBAT[i][2]}`);
+  pakai.forEach((q, i) => mutasiObat(i, -q, 'Keluar', 'Diberikan saat kunjungan', stamp));
+  KUNJ.unshift([stamp, inisial, $('#vU').value, kel, [...obatTeks, cat].filter(Boolean).join(', ') || '—', [tensi && 'Tensi ' + tensi, suhu && suhu + ' °C'].filter(Boolean).join(' · '), true]);
+  const bln = D(date).getMonth();
+  if(bln < KUNJ_BLN.length) KUNJ_BLN[bln]++;
+  if(bln === TODAY.getMonth()){ const k = KLN.keluhan.find(x => x[0] === kel); if(k) k[1]++; else KLN.keluhan.push([kel, 1]); }
+  closeModal(); rerender();
+  toast(`Kunjungan ${inisial} tercatat${pakai.size ? ' · stok obat diperbarui' : ''}`);
+}
+
+function klnClick(el, a){
+  switch(a){
+    case 'stokMasuk': stokMasukModal(); return true;
+    case 'kunjungan': kunjunganModal(); return true;
+    case 'smSave': smSave(); return true;
+    case 'asSave': asSave(); return true;
+    case 'vSave': vSave(); return true;
+    case 'asMode': asSwitch(el.dataset.m); return true;
+    case 'oAtur': aturStokModal(Number(el.dataset.i)); return true;
+    case 'oReset': KLN.q = ''; KLN.st = 'all'; rerender(); return true;
+    case 'oInc': case 'oDec': { const i = Number(el.dataset.i), o = OBAT[i], before = o[1], d = a === 'oInc' ? 1 : -1;
+      if(before + d < 0) return true;
+      mutasiObat(i, d, 'Koreksi', 'Penyesuaian cepat'); rerender(); stokToast(o, before); return true; }
+    case 'vAdd': { if(!OBAT.some(o => o[1] > 0)){ toast('Semua stok obat habis'); return true; } $('#vRows').insertAdjacentHTML('beforeend', vRowHtml()); return true; }
+    case 'vDel': el.closest('.krow').remove(); return true;
+  }
+  return false;
+}
+function klnInput(el, a){
+  if(a === 'oQ'){ KLN.q = el.value; rerender('[data-act="oQ"]'); return; }
+  if(a === 'oSt'){ KLN.st = el.value; rerender(); return; }
+  if(a === 'smLive'){ if(el.id === 'smO' && el.value !== 'new') $('#smE').value = expToYm(OBAT[Number(el.value)][4]); smPreview(); return; }
+  if(a === 'asLive'){ asPreview(); return; }
+  if(a === 'vLive'){ $('#vKLWrap').classList.toggle('hide', el.value !== 'lain'); }
 }
 
 /* ================= ROUTER ================= */
@@ -2087,6 +2332,7 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('input', e => {
   const a = e.target.dataset.act;
+  klnInput(e.target, a);
   if(a==='dlQ'){ PRC.dl.q = e.target.value; rerender('[data-act="dlQ"]'); }
   if(a==='fQ'){ state.f.q = e.target.value; rerender('[data-act="fQ"]'); }
   if(a==='nom'){
@@ -2099,6 +2345,7 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if(!el) return;
   const a = el.dataset.act;
   if(prcClick(el, a, e)) return;
+  if(klnClick(el, a)) return;
   if(a==='goPerlu'){ state.f = {tim:'all', st:'perlu', q:''}; }
   if(a==='goTim'){ state.f = {tim:el.dataset.tim, st:'all', q:''}; }
   if(a==='goTimPerlu'){ state.f = {tim:el.dataset.tim, st:'perlu', q:''}; }
@@ -2118,7 +2365,7 @@ document.addEventListener('click', e => {
   if(a==='print'){ window.print(); }
   if(a==='ingat'){ toast('Pengingat unggah dokumen dikirim ke ' + el.dataset.peg); }
   if(a==='toastOnly'){ toast(el.dataset.msg); }
-  if(a==='addFormat'||a==='addKeg'||a==='kunjungan'){ toast('Form input dibuka (simulasi mockup)'); }
+  if(a==='addFormat'||a==='addKeg'){ toast('Form input dibuka (simulasi mockup)'); }
   if(a==='import'){ toast('Data anggaran tersimpan (simulasi mockup)'); }
   if(a==='saveReal'){
     const k = KEG.find(x=>x.id==$('#kSel').value);
