@@ -517,7 +517,7 @@ const viewerTim = () => ['PAUD','SD','SMP','SMA'].includes(state.role) ? state.r
 let KEG = [
   {id:1, nama:'Bimtek Perencanaan Berbasis Data PAUD', tim:'PAUD', m:'2026-03-03', s:'2026-03-05', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:420, r:412, st:'selesai', lapKeu:true, lapKeuTgl:'2026-03-09'},
   {id:2, nama:'Webinar Praktik Baik Pembelajaran PAUD', tim:'PAUD', m:'2026-10-09', s:'2026-10-09', tempat:'Daring (Zoom)', mode:'Daring', a:35, r:0, st:'perlu'},
-  {id:3, nama:'Diseminasi Praktik Baik PAUD', tim:'PAUD', m:'2026-11-18', s:'2026-11-19', tempat:'Aula utama', mode:'Luring', a:150, r:0, st:'belum', resch:'11–12 Nov'},
+  {id:3, nama:'Diseminasi Praktik Baik PAUD', tim:'PAUD', m:'2026-11-18', s:'2026-11-19', tempat:'Aula utama', mode:'Luring', a:150, r:0, st:'belum', resch:'11–12 Nov', asal:{m:'2026-11-11', s:'2026-11-12'}, reschAlasan:'Menyesuaikan ketersediaan narasumber'},
   {id:4, nama:'Workshop Pembelajaran Mendalam SD', tim:'SD', m:'2026-09-24', s:'2026-09-26', tempat:'Hotel, Jakarta Selatan', mode:'Luring', a:560, r:498, st:'proses', lapKeu:true, lapKeuTgl:'2026-10-01'},
   {id:5, nama:'Monev BOSP Jakarta Barat', tim:'SD', m:'2026-10-06', s:'2026-10-08', tempat:'Sekolah sasaran, Jakarta Barat', mode:'Luring', a:95, r:0, st:'perlu'},
   {id:6, nama:'Bimtek Aplikasi Rapor Pendidikan SD', tim:'SD', m:'2026-05-20', s:'2026-05-22', tempat:'Aula utama', mode:'Luring', a:240, r:236, st:'selesai', lapKeu:true, lapKeuTgl:'2026-05-26'},
@@ -525,7 +525,7 @@ let KEG = [
   {id:8, nama:'Pendampingan Rapor Pendidikan SMP', tim:'SMP', m:'2026-09-29', s:'2026-10-02', tempat:'Jakarta Timur', mode:'Luring', a:310, r:188, st:'proses'},
   {id:9, nama:'Penyusunan KOSP Jenjang SMP', tim:'SMP', m:'2026-06-10', s:'2026-06-12', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:380, r:371, st:'selesai', lapKeu:true, lapKeuTgl:'2026-06-16'},
   {id:10, nama:'FGD Kurikulum SMA', tim:'SMA', m:'2026-10-14', s:'2026-10-14', tempat:'Ruang Rapat 2', mode:'Luring', a:45, r:0, st:'perlu'},
-  {id:11, nama:'Penguatan Asesmen SMA', tim:'SMA', m:'2026-11-03', s:'2026-11-06', tempat:'Bogor (luar kota)', mode:'Luring', a:520, r:0, st:'belum', resch:'27–30 Okt'},
+  {id:11, nama:'Penguatan Asesmen SMA', tim:'SMA', m:'2026-11-03', s:'2026-11-06', tempat:'Bogor (luar kota)', mode:'Luring', a:520, r:0, st:'belum', resch:'27–30 Okt', asal:{m:'2026-10-27', s:'2026-10-30'}, reschAlasan:'Menyesuaikan jadwal sekolah sasaran'},
   {id:12, nama:'Rakor Pemetaan Mutu SMA', tim:'SMA', m:'2026-07-15', s:'2026-07-16', tempat:'Aula utama', mode:'Luring', a:120, r:117, st:'selesai', lapKeu:true, lapKeuTgl:'2026-07-20'},
   {id:13, nama:'Pemetaan Mutu Satuan Pendidikan', tim:'SMP', m:'2026-02-02', s:'2026-02-04', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:640, r:628, st:'selesai', lapKeu:true, lapKeuTgl:'2026-02-09'},
   {id:14, nama:'Validasi Data Rapor Pendidikan', tim:'SMP', m:'2026-10-21', s:'2026-10-23', tempat:'Daring (Zoom)', mode:'Daring', a:60, r:0, st:'perlu'},
@@ -926,7 +926,8 @@ function vKeuRealisasi(){
     return '<span class="sm">—</span>';
   };
   return shell('keu','realisasi',KEU_MENU(), `
-  ${heading('Tahun Anggaran 2026','Realisasi Anggaran per Kegiatan', isAdmin()?'<button class="btn p" data-act="addKeg">Tambah kegiatan</button>':'')}
+  ${heading('Tahun Anggaran 2026','Realisasi Anggaran per Kegiatan', isAdmin()?'<button class="btn p" data-act="alOpen">Impor alokasi dari Excel</button>':'')}
+  ${isAdmin() && KEG.some(k => !(k.a > 0)) ? `<div class="alert warn" style="margin-bottom:14px">${svgWarn}<span><b>${KEG.filter(k => !(k.a > 0)).length} kegiatan baru dari Perencanaan belum diisi alokasinya.</b> Isi lewat tombol <b>Ubah</b> pada kegiatan, atau sekaligus lewat <b>Impor alokasi dari Excel</b>.</span></div>` : ''}
   <div class="tools">
     <label class="f">Tim kerja<select data-act="fTim"><option value="all">Semua tim kerja</option>${Object.keys(TIM).map(t=>`<option value="${t}" ${tim===t?'selected':''}>${TIM[t].nama}</option>`).join('')}</select></label>
     <label class="f">Status<select data-act="fSt"><option value="all">Semua status</option>${Object.keys(STATUS).map(s=>`<option value="${s}" ${st===s?'selected':''}>${STATUS[s].l}</option>`).join('')}</select></label>
@@ -970,6 +971,54 @@ function vKeuRealisasi(){
   `);
 }
 
+/* ---------- IMPOR ALOKASI (Keuangan) ----------
+   Daftar kegiatan berasal dari Perencanaan; Keuangan hanya mengisi kolom alokasi.
+   Baris dicocokkan lewat Tim Kerja + Nama Kegiatan. */
+const AL = {pending:null};
+const AL_HEADER = ['Tim Kerja','Nama Kegiatan','Alokasi (juta Rp)'];
+const alRows = () => [AL_HEADER, ...KEG.map(k => [k.tim, k.nama, k.a > 0 ? k.a : ''])];
+function rowsToAlokasi(rows){
+  const h = rows.findIndex(r => r.some(c => String(c || '').trim().toLowerCase() === 'nama kegiatan'));
+  if(h < 0) return {error:'Kolom "Nama Kegiatan" tidak ditemukan. Gunakan template dari jendela ini.'};
+  const H = rows[h].map(c => String(c || '').trim().toLowerCase()), col = n => H.findIndex(x => x.startsWith(n.toLowerCase()));
+  const items = [], errors = [];
+  rows.slice(h+1).forEach((r, i) => {
+    const no = h + i + 2, nama = String(r[col('Nama Kegiatan')] || '').trim(), timRaw = String(r[col('Tim Kerja')] || '').trim().toUpperCase();
+    if(!nama && !timRaw) return;
+    const raw = r[col('Alokasi')];
+    if(raw === '' || raw == null) return; // alokasi belum diisi: dilewati tanpa error
+    const tim = Object.keys(TIM).find(k => k === timRaw || TIM[k].nama.toUpperCase() === timRaw);
+    const k = tim && KEG.find(x => x.tim === tim && x.nama.trim().toLowerCase() === nama.toLowerCase());
+    if(!k){ errors.push(`Baris ${no}: kegiatan "${nama || '(kosong)'}" tidak ditemukan di daftar Perencanaan`); return; }
+    const a = parseNum(raw);
+    if(!(a >= 0) || a == null){ errors.push(`Baris ${no}: alokasi "${raw}" bukan angka`); return; }
+    items.push({id:k.id, tim:k.tim, nama:k.nama, lama:k.a, baru:a});
+  });
+  return {items, errors, count:items.length};
+}
+function alModal(){
+  const p = AL.pending, xl = !!window.XLSX, kosong = KEG.filter(k => !(k.a > 0)).length;
+  $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" style="max-width:720px">
+    <h3 id="mt">Impor alokasi anggaran dari Excel</h3>
+    <p class="sm" style="margin:0">Daftar kegiatan berasal dari Perencanaan, jadi Anda cukup mengisi kolom <b>Alokasi</b>. Saat ini ${kosong} dari ${KEG.length} kegiatan belum diisi alokasinya.</p>
+    <div class="steps">
+      <div class="step"><div class="k"><i style="background:var(--acc)">1</i>Unduh template</div><div class="acts" style="margin-top:8px"><button class="btn sm" data-act="alTpl">Daftar kegiatan${xl?' (.xlsx)':' (.csv)'}</button></div></div>
+      <div class="step"><div class="k"><i style="background:var(--acc)">2</i>Isi alokasi</div><div class="sm" style="margin-top:6px">Isi kolom Alokasi (juta Rp). Jangan ubah nama kegiatan dan judul kolom.</div></div>
+      <div class="step"><div class="k"><i style="background:var(--acc)">3</i>Unggah</div><label class="btn sm p" style="margin-top:8px;cursor:pointer">Pilih file<input type="file" class="hide" data-act="alFile" accept=".csv,.xlsx,.xls"></label></div>
+    </div>
+    <span class="sm">${xl ? 'Mendukung .xlsx dan .csv.' : 'Mode tanpa internet: gunakan .csv (di Excel: Simpan sebagai → CSV). Impor .xlsx aktif saat terhubung internet.'}</span>
+    ${p ? (p.error ? `<div class="alert bad">${svgWarn}<span>${esc(p.error)}</span></div>` : `
+      <div class="card" style="background:#FBFCFD"><b>Pratinjau · ${esc(p.file)}</b>
+        <div class="sm" style="margin:4px 0 10px">${p.count} alokasi akan disimpan${p.errors.length ? `, ${p.errors.length} baris dilewati` : ''}. Baris dengan alokasi kosong tidak diubah.</div>
+        ${p.errors.length ? `<div class="alert warn" style="margin-bottom:10px">${svgWarn}<span><b>${p.errors.length} catatan:</b><br>${p.errors.slice(0,5).map(esc).join('<br>')}${p.errors.length>5?'<br>…':''}</span></div>` : ''}
+        ${p.count ? `<div class="tbox" style="margin-bottom:6px"><table class="t" style="min-width:520px"><thead><tr><th>Tim</th><th>Kegiatan</th><th class="r">Sebelumnya</th><th class="r">Alokasi baru</th></tr></thead><tbody>
+          ${p.items.slice(0,8).map(x => `<tr><td>${x.tim === 'UMUM' ? 'Umum' : x.tim}</td><td>${esc(x.nama)}</td><td class="r num">${x.lama > 0 ? jt(x.lama) : '—'}</td><td class="r num"><b>${jt(x.baru)}</b></td></tr>`).join('')}
+          ${p.count > 8 ? `<tr><td colspan="4" class="sm" style="text-align:center">… dan ${p.count - 8} kegiatan lainnya</td></tr>` : ''}</tbody></table></div>` : ''}
+      </div>`) : ''}
+    <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="alCancel">Tutup</button><button class="btn p" data-act="alApply" ${p && p.count ? '' : 'disabled'}>${p && p.count ? 'Simpan ' + p.count + ' alokasi' : 'Simpan alokasi'}</button></div>
+  </div></div>`;
+}
+
 function vKeuJadwal(){
   const mo = state.cal, yr = 2026;
   const first = new Date(yr, mo, 1);
@@ -998,7 +1047,7 @@ function vKeuJadwal(){
       <td class="num" style="white-space:nowrap">${rentang(k.m,k.s)}</td><td><b>${esc(k.nama)}</b></td>
       <td><span class="tag" style="background:${TIM[k.tim].t};color:${TIM[k.tim].c}">${TIM[k.tim].nama}</span></td>
       <td>${esc(k.tempat)}</td><td>${k.mode}</td>
-      <td>${k.resch?`<span class="pill warn">Dijadwal ulang</span><div class="sm">semula ${k.resch}</div>`:'<span class="pill ok">Sesuai rencana</span>'}</td>
+      <td>${k.resch?`<span class="pill warn">Dijadwal ulang</span><div class="sm">semula ${k.resch}${k.reschAlasan ? ' · ' + esc(k.reschAlasan) : ''}</div>`:'<span class="pill ok">Sesuai rencana</span>'}</td>
       ${isUnit()?`<td>${canEdit(k)?`<button class="btn sm edit" data-act="resched" data-id="${k.id}">Ubah jadwal</button>`:'<span class="sm">—</span>'}</td>`:''}</tr>`).join(''):`<tr><td colspan="${isUnit()?7:6}" style="text-align:center;padding:24px;color:var(--mute)">Tidak ada kegiatan pada bulan ini.</td></tr>`}
     </tbody></table></div>
     <p class="sm" style="margin-top:10px">Jadwal awal diambil dari program yang diinput tim kerja/perencanaan di awal tahun. Perubahan jadwal oleh tim kerja otomatis terlihat di sini dan di dashboard Perencanaan.</p>
@@ -1059,13 +1108,21 @@ function vKeuUnggah(){
         <label class="f">Surat tugas<select id="upST">${mine.map(s=>`<option value="${s.no}">${s.no} · ${s.tujuan} (${rentang(s.m,s.s)})</option>`).join('')}</select></label>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="f">SPPD yang sudah ditandatangani (hasil pindai/foto)</div>
-        <label class="drop" style="cursor:pointer">${svgUp}<b id="sppdName">Pilih berkas SPPD</b><span class="sm">PDF/JPG/PNG · maks. 10 MB</span><input type="file" class="hide" data-act="file" data-target="sppdName" accept=".pdf,.jpg,.jpeg,.png"></label>
+        <div class="f">Foto struk pembayaran <span class="sm" style="font-weight:500">· wajib: unggah foto atau sertakan tautan di bawah</span></div>
+        <label class="drop" style="cursor:pointer">${svgUp}<b id="sppdName">Pilih foto struk pembayaran</b><span class="sm">Bisa memilih lebih dari satu file sekaligus · JPG/PNG/PDF · maks. 10 MB per file</span><input id="upStruk" type="file" multiple class="hide" data-act="strukFiles" accept=".pdf,.jpg,.jpeg,.png"></label>
+        <div id="strukList"></div>
+        <label class="f">Atau sertakan tautan Google Drive
+          <input id="upLink" type="url" inputmode="url" placeholder="https://drive.google.com/…" autocomplete="off">
+          <span class="sm">Pastikan akses tautan sudah dibuka agar bagian keuangan dapat melihatnya.</span>
+        </label>
       </div>
-      <div class="tbox"><table class="t"><thead><tr><th>Jenis bukti</th><th>Berkas</th><th class="r" style="width:200px">Nominal (Rp)</th></tr></thead><tbody>
+      <details open style="border:1.5px solid var(--line);border-radius:10px;background:#fff">
+      <summary style="cursor:pointer;padding:12px 14px;font-weight:700">Rincian pengeluaran per jenis <span class="pill mu">Opsional</span> <span class="sm" style="font-weight:500">· boleh dikosongkan, cukup struk di atas</span></summary>
+      <div class="tbox" style="border:none;border-top:1px solid var(--line);border-radius:0"><table class="t"><thead><tr><th>Jenis bukti</th><th>Berkas</th><th class="r" style="width:200px">Nominal (Rp)</th></tr></thead><tbody>
       ${rows.map(([k,l])=>`<tr><td><b>${l}</b></td><td><label class="btn sm" style="cursor:pointer"><span id="fn_${k}">Pilih berkas</span><input type="file" class="hide" data-act="file" data-target="fn_${k}"></label></td><td class="r"><input class="num" data-act="nom" data-k="${k}" inputmode="numeric" placeholder="0" style="width:100%;min-height:44px;border:1.5px solid var(--field);border-radius:8px;padding:0 10px;text-align:right"></td></tr>`).join('')}
       <tr class="tot"><td colspan="2">Total pengeluaran dilaporkan</td><td class="r num" id="upTotal">Rp 0</td></tr>
       </tbody></table></div>
+      </details>
       <div class="acts" style="justify-content:space-between">
         <span class="sm">Salinan ini untuk verifikasi awal. Dokumen asli tetap diserahkan ke keuangan.</span>
         <button class="btn p" data-act="submitUpload">Kirim ke bagian keuangan</button>
@@ -1076,7 +1133,7 @@ function vKeuUnggah(){
         ${mine.map(s=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line2)"><div><b>${s.tujuan}</b><div class="sm">${s.no} · ${rentang(s.m,s.s)}</div></div><span class="pill ${DOK[s.dok].c}" style="align-self:center">${DOK[s.dok].l}</span></div>`).join('')}
       </div>
       <div class="card"><h2>Riwayat unggahan</h2>
-        <div id="upHist">${state.uploads.length?state.uploads.map(u=>`<div style="padding:8px 0;border-top:1px solid var(--line2)"><b>${u.st}</b><div class="sm">${u.waktu} · ${rp(u.total)}</div></div>`).join(''):'<div class="sm">Belum ada unggahan.</div>'}</div>
+        <div id="upHist">${state.uploads.length?state.uploads.map(u=>`<div style="padding:8px 0;border-top:1px solid var(--line2)"><b>${u.st}</b><div class="sm">${u.waktu}${u.total ? ' · ' + rp(u.total) : ''}${u.nFile ? ' · ' + u.nFile + ' foto struk' : ''}${u.link ? ` · <a href="${esc(u.link)}" target="_blank" rel="noopener">Tautan Drive</a>` : ''}</div></div>`).join(''):'<div class="sm">Belum ada unggahan.</div>'}</div>
       </div>
       <div class="note">Pengunggahan dilakukan <b>per orang</b>. Bagian keuangan melihatnya sudah dikelompokkan dan dijumlahkan <b>per tim kerja</b> di menu Surat tugas &amp; perjalanan dinas. Nama pegawai dan daftar surat tugas terisi otomatis dari akun Anda berdasarkan data <b>Kepegawaian</b>.</div>
     </div>
@@ -1710,11 +1767,20 @@ function rowsToKeg(rows){
   });
   return {items, errors, count:items.length};
 }
-function kgSetujui(data, id){
+/* ubah jadwal kegiatan: mencatat jadwal semula, alasan, dan label "dijadwal ulang".
+   Bila jadwal dikembalikan ke semula, label dan catatannya otomatis hilang. */
+function ubahJadwal(k, m, s, alasan){
+  if(k.m === m && k.s === s){ if(alasan && k.asal) k.reschAlasan = alasan; return false; }
+  if(!k.asal && k.r === 0){ k.asal = {m:k.m, s:k.s}; k.resch = rentang(k.m, k.s); }
+  k.m = m; k.s = s;
+  if(alasan && k.asal) k.reschAlasan = alasan;
+  if(k.asal && k.asal.m === m && k.asal.s === s){ delete k.asal; delete k.resch; delete k.reschAlasan; }
+  return true;
+}
+function kgSetujui(data, id, alasan){
   if(id){
-    const k = KEG.find(x => x.id == id);
-    if(!k.resch && k.r === 0 && (k.m !== data.m || k.s !== data.s)) k.resch = rentang(k.m, k.s);
-    Object.assign(k, data); return k;
+    const k = KEG.find(x => x.id == id), {m, s, ...lain} = data;
+    Object.assign(k, lain); ubahJadwal(k, m, s, alasan); return k;
   }
   const k = {id:Math.max(...KEG.map(x => x.id)) + 1, ...data, a:0, r:0, st: D(data.s) < TODAY ? 'perlu' : 'belum'};
   KEG.push(k); return k;
@@ -1732,6 +1798,8 @@ function kgModal(id){
       <label class="f">Tanggal mulai<input type="date" id="kgM" value="${k.m}"></label>
       <label class="f">Tanggal selesai<input type="date" id="kgS" value="${k.s}"></label>
     </div>
+    ${id ? `<label class="f">Alasan perubahan jadwal<input id="kgW" value="${esc(k.reschAlasan || '')}" placeholder="Wajib diisi bila tanggal diubah, mis. menyesuaikan jadwal narasumber"></label>` : ''}
+    ${id && k.asal ? `<div class="alert warn" style="align-items:center;flex-wrap:wrap">${svgWarn}<span style="flex:1 1 200px">Jadwal semula: <b>${rentang(k.asal.m, k.asal.s)}</b></span><button type="button" class="btn sm" data-act="kgRestore" data-id="${id}">Kembalikan ke jadwal semula</button></div>` : ''}
     <label class="f">Tempat<input id="kgL" value="${k.tempat === '—' ? '' : esc(k.tempat)}" placeholder="mis. Hotel, Jakarta Pusat / Daring (Zoom)"></label>
     <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="kgR" ${k.rutin?'checked':''} style="width:18px;height:18px">Kegiatan rutin / berkelanjutan (tidak tampil di kalender)</label>
     <span class="sm">Anggaran (alokasi, realisasi, status) diisi sepenuhnya oleh Admin Keuangan. Perubahan jadwal di sini otomatis tersinkron ke Keuangan.</span>
@@ -1768,7 +1836,7 @@ function vPrcKegiatan(){
     <div class="tbox"><table class="t" style="min-width:980px"><thead><tr><th>Tim</th><th>Kegiatan</th><th>Tanggal</th><th>Tempat</th><th>Mode</th><th>Anggaran<div class="sm" style="font-weight:500">diisi Keuangan</div></th><th>Aksi</th></tr></thead><tbody>
     ${list.map(k => `<tr>
       <td><span class="tag" style="background:${TIM[k.tim].t};color:${TIM[k.tim].c}">${k.tim === 'UMUM' ? 'Umum' : k.tim}</span></td>
-      <td><b>${esc(k.nama)}</b>${k.rutin ? ' <span class="pill mu">rutin</span>' : ''}${k.resch ? ' <span class="pill warn">dijadwal ulang</span>' : ''}</td>
+      <td><b>${esc(k.nama)}</b>${k.rutin ? ' <span class="pill mu">rutin</span>' : ''}${k.resch ? ' <span class="pill warn">dijadwal ulang</span>' : ''}${k.resch ? `<div class="sm">semula ${k.resch}${k.reschAlasan ? ' · ' + esc(k.reschAlasan) : ''}</div>` : ''}</td>
       <td class="num" style="white-space:nowrap">${rentang(k.m,k.s)}</td><td>${esc(k.tempat)}</td><td>${k.mode}</td>
       <td>${k.a > 0 ? '<span class="pill ok">Sudah diisi</span>' : '<span class="pill mu">Menunggu Keuangan</span>'}</td>
       <td style="white-space:nowrap"><button class="btn sm edit" data-act="kgEdit" data-id="${k.id}">Ubah</button> <button class="btn sm" data-act="kgDel" data-id="${k.id}" style="color:var(--bad)" ${k.r>0?'disabled title="Sudah ada realisasi, tidak dapat dihapus"':''}>Hapus</button></td></tr>`).join('')}
@@ -2018,7 +2086,7 @@ function prcClick(el, a, e){
         <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Tutup</button></div></div></div>`; return true; }
     case 'kegOpen': { const k = KEG.find(x => x.id == el.dataset.id);
       $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><span class="tag" style="align-self:flex-start;background:${TIM[k.tim].t};color:${TIM[k.tim].c}">Kegiatan ${TIM[k.tim].nama}</span><h3 id="mt">${esc(k.nama)}</h3>
-        <div>${rentang(k.m,k.s)} 2026 · ${esc(k.tempat)} · ${k.mode}</div>${k.resch ? `<div><span class="pill warn">Dijadwal ulang</span> <span class="sm">semula ${k.resch}</span></div>` : ''}<div class="sm">${location.hash.startsWith('#/keu') ? 'Data dari program yang diinput tim kerja/Perencanaan, sama dengan kalender di dashboard Perencanaan. Perubahan jadwal dilakukan oleh tim kerja terkait.' : 'Data dari program kegiatan tim kerja; sama dengan kalender Keuangan. Perubahan jadwal dilakukan oleh tim kerja terkait.'}</div>
+        <div>${rentang(k.m,k.s)} 2026 · ${esc(k.tempat)} · ${k.mode}</div>${k.resch ? `<div><span class="pill warn">Dijadwal ulang</span> <span class="sm">semula ${k.resch}</span></div>${k.reschAlasan ? `<div class="sm">Alasan: ${esc(k.reschAlasan)}</div>` : ''}` : ''}<div class="sm">${location.hash.startsWith('#/keu') ? 'Data dari program yang diinput tim kerja/Perencanaan, sama dengan kalender di dashboard Perencanaan. Perubahan jadwal dilakukan oleh tim kerja terkait.' : 'Data dari program kegiatan tim kerja; sama dengan kalender Keuangan. Perubahan jadwal dilakukan oleh tim kerja terkait.'}</div>
         <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Tutup</button></div></div></div>`; return true; }
     case 'evSave': {
       const j = $('#aJ').value.trim(), m = $('#aM').value, s = $('#aS').value || m;
@@ -2033,9 +2101,14 @@ function prcClick(el, a, e){
     case 'kgSave': {
       const nama = $('#kgN').value.trim(), m = $('#kgM').value, s = $('#kgS').value || m;
       if(!nama || !m || s < m){ toast(!nama ? 'Nama kegiatan wajib diisi' : 'Tanggal tidak valid'); return true; }
-      const edit = !!el.dataset.id;
-      kgSetujui({tim:$('#kgT').value, nama, m, s, tempat:$('#kgL').value.trim() || '—', mode:$('#kgMd').value, rutin:$('#kgR').checked}, el.dataset.id);
+      const edit = !!el.dataset.id, alasan = $('#kgW') ? $('#kgW').value.trim() : '';
+      if(edit){ const k0 = KEG.find(x => x.id == el.dataset.id), balik = k0.asal && k0.asal.m === m && k0.asal.s === s;
+        if((k0.m !== m || k0.s !== s) && !alasan && !balik){ toast('Isi alasan perubahan jadwal'); return true; } }
+      kgSetujui({tim:$('#kgT').value, nama, m, s, tempat:$('#kgL').value.trim() || '—', mode:$('#kgMd').value, rutin:$('#kgR').checked}, el.dataset.id, alasan);
       closeModal(); rerender(); toast(edit ? 'Kegiatan diperbarui dan tersinkron ke Keuangan' : 'Kegiatan ditambahkan dan tersinkron ke Keuangan'); return true; }
+    case 'kgRestore': { const k = KEG.find(x => x.id == el.dataset.id);
+      if(k && k.asal){ ubahJadwal(k, k.asal.m, k.asal.s); closeModal(); rerender(); toast('Jadwal dikembalikan ke semula dan tersinkron ke Keuangan'); }
+      return true; }
     case 'kgDel': { const k = KEG.find(x => x.id == el.dataset.id);
       if(k.r > 0){ toast('Sudah ada realisasi, kegiatan tidak dapat dihapus'); return true; }
       if(!confirm('Hapus kegiatan "' + k.nama + '"? Kegiatan' + (k.a > 0 ? ' dan alokasi anggaran yang sudah diisi Keuangan' : '') + ' juga hilang dari dashboard Keuangan.')) return true;
@@ -2420,6 +2493,19 @@ document.addEventListener('change', e => {
     k.lapKeu = e.target.checked; k.lapKeuTgl = k.lapKeu ? iso(TODAY) : null;
     rerender(); toast(k.lapKeu ? 'Laporan ' + k.nama + ' ditandai sudah diterima Keuangan' : 'Tanda laporan diterima Keuangan dibatalkan');
   }
+  if(a==='strukFiles'){
+    const fs = [...e.target.files], fmt = n => n >= 1048576 ? (n/1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n/1024)) + ' KB';
+    $('#sppdName').textContent = fs.length ? fs.length + ' file dipilih' : 'Pilih foto struk pembayaran';
+    $('#strukList').innerHTML = fs.map(f => `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line2);font-size:15px"><span style="overflow-wrap:anywhere">${esc(f.name)}</span><span class="sm" style="white-space:nowrap;${f.size > 10*1024*1024 ? 'color:var(--bad);font-weight:700' : ''}">${fmt(f.size)}${f.size > 10*1024*1024 ? ' · terlalu besar' : ''}</span></div>`).join('');
+  }
+  if(a==='alFile'){
+    const f = e.target.files[0]; if(!f) return;
+    const done = rows => { const r = rowsToAlokasi(rows); r.file = f.name; AL.pending = r; alModal(); };
+    if(/\.xlsx?$/i.test(f.name)){
+      if(!window.XLSX){ AL.pending = {error:'File .xlsx butuh koneksi internet untuk dibaca di mockup ini. Simpan sebagai CSV dari Excel lalu unggah ulang.', file:f.name}; alModal(); return; }
+      f.arrayBuffer().then(buf => { const wb = XLSX.read(buf, {type:'array'}); done(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:''})); });
+    } else f.text().then(tx => done(parseCSV(tx)));
+  }
   if(a==='stJenis'){ state.stf.jenis = e.target.value; rerender(); }
   if(a==='stDok'){ state.stf.dok = e.target.value; rerender(); }
   if(a==='file'){ const f = e.target.files[0]; if(f){ const t = document.getElementById(e.target.dataset.target); if(t) t.textContent = f.name; } }
@@ -2452,11 +2538,22 @@ document.addEventListener('click', e => {
   if(a==='print'){ window.print(); }
   if(a==='ingat'){ toast('Pengingat unggah dokumen dikirim ke ' + el.dataset.peg); }
   if(a==='toastOnly'){ toast(el.dataset.msg); }
-  if(a==='addFormat'||a==='addKeg'){ toast('Form input dibuka (simulasi mockup)'); }
+  if(a==='addFormat'){ toast('Form input dibuka (simulasi mockup)'); }
+  if(a==='alOpen'){ AL.pending = null; alModal(); }
+  if(a==='alTpl'){ downloadRows('Template_alokasi_anggaran_' + 2026, alRows(), !!window.XLSX); toast('Template diunduh'); }
+  if(a==='alCancel'){ AL.pending = null; closeModal(); }
+  if(a==='alApply' && AL.pending && AL.pending.count){
+    const n = AL.pending.count; AL.pending.items.forEach(x => { const k = KEG.find(z => z.id === x.id); if(k) k.a = x.baru; });
+    AL.pending = null; closeModal(); rerender(); toast(n + ' alokasi anggaran tersimpan');
+  }
   if(a==='submitUpload'){
     const total = Number(($('#upTotal').textContent).replace(/[^0-9]/g,''));
     const stNo = $('#upST').value;
-    state.uploads.unshift({st:stNo, total, waktu:'28 Okt 2026, ' + new Date().toTimeString().slice(0,5)});
+    const link = ($('#upLink').value || '').trim(), files = [...$('#upStruk').files];
+    if(!files.length && !link){ toast('Sertakan minimal satu foto struk atau tautan Google Drive'); return; }
+    if(files.some(f => f.size > 10*1024*1024)){ toast('Ukuran tiap file maksimal 10 MB'); return; }
+    if(link && !/^https:\/\/(drive|docs)\.google\.com\/\S+$/i.test(link)){ toast('Tautan harus berupa tautan Google Drive (https://drive.google.com/…)'); return; }
+    state.uploads.unshift({st:stNo, total, link, nFile:files.length, waktu:'28 Okt 2026, ' + new Date().toTimeString().slice(0,5)});
     const s = ST.find(x=>x.no===stNo); if(s && s.dok!=='akan'){ s.dok = 'lengkap'; s.biaya = total; }
     rerender(); toast('Dokumen terkirim ke bagian keuangan');
   }
@@ -2484,14 +2581,16 @@ document.addEventListener('click', e => {
       <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         <label class="f">Mulai<input type="date" id="rM" value="${k.m}"></label>
         <label class="f">Selesai<input type="date" id="rS" value="${k.s}"></label></div>
-      <label class="f">Alasan perubahan<input id="rW" placeholder="mis. menyesuaikan jadwal narasumber"></label>
+      <label class="f">Alasan perubahan (wajib bila tanggal diubah)<input id="rW" value="${esc(k.reschAlasan || '')}" placeholder="mis. menyesuaikan jadwal narasumber"></label>
       <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="rSave" data-id="${k.id}">Simpan jadwal</button></div>
     </div></div>`;
   }
   if(a==='rSave'){
-    const k = KEG.find(x=>x.id==el.dataset.id); const m = $('#rM').value, s = $('#rS').value;
-    if(m && s && m<=s){ if(!k.resch) k.resch = rentang(k.m,k.s); k.m = m; k.s = s; state.cal = D(m).getMonth(); closeModal(); rerender(); toast('Jadwal diperbarui — keuangan & perencanaan ikut melihat perubahan'); }
-    else toast('Tanggal tidak valid');
+    const k = KEG.find(x=>x.id==el.dataset.id); const m = $('#rM').value, s = $('#rS').value, alasan = $('#rW').value.trim();
+    const balik = k.asal && k.asal.m === m && k.asal.s === s;
+    if(!(m && s && m<=s)) toast('Tanggal tidak valid');
+    else if((k.m !== m || k.s !== s) && !alasan && !balik) toast('Isi alasan perubahan jadwal');
+    else { ubahJadwal(k, m, s, alasan); state.cal = D(m).getMonth(); closeModal(); rerender(); toast('Jadwal diperbarui — keuangan & perencanaan ikut melihat perubahan'); }
   }
   if(a==='mClose' || (a==='ovClose' && e.target===el)) closeModal();
 });
