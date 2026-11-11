@@ -111,15 +111,6 @@ a.card:hover{border-color:var(--acc)}
 .upstats b{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25}
 .upstats .is-bad b{color:var(--bad)}
 
-/* area penyajian form */
-.formbox{padding:0;overflow:hidden}
-.formhead{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:20px 24px;background:var(--accT);border-bottom:1px solid var(--line)}
-.formhead h2{margin:0 0 2px}
-.gform{display:flex;flex-direction:column;gap:18px;padding:24px;max-width:760px}
-.wajib{color:var(--bad);font-weight:800}
-.formframe{display:block;width:100%;height:780px;border:0;background:#fff}
-.howto{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
-
 .alert{display:flex;gap:12px;align-items:center;padding:14px 18px;border-radius:10px;font-size:16px;border:1.5px solid}
 .alert.bad{background:var(--bad-bg);color:#6E1010;border-color:#E49C9C}
 .alert.warn{background:var(--warn-bg);color:#663004;border-color:#E2B36E}
@@ -137,6 +128,21 @@ table.t td.r,table.t th.r{text-align:right;white-space:nowrap}
 table.t tr.sub td{background:#F1F4F8;font-weight:800}
 table.t tr.tot td{background:#E2E8EF;font-weight:800;border-top:2px solid var(--field)}
 table.t .pill{white-space:normal;border-radius:12px;line-height:1.3}
+/* laporan selesai tugas: kotak centang besar */
+.cek{display:inline-flex;align-items:center;gap:8px;font-weight:700;white-space:nowrap;cursor:pointer}
+.cek.ro{cursor:default}
+.cb{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;margin:0;border:2px solid var(--field);border-radius:6px;background:#fff;display:inline-grid;place-content:center;cursor:pointer}
+.cb:checked{background:var(--acc);border-color:var(--acc)}
+.cb:checked::after{content:"";width:6px;height:12px;margin-top:-3px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg)}
+.cb:disabled{cursor:not-allowed}
+.cb:disabled:not(:checked){background:#EEF1F5}
+.cb.auto:checked{background:#475569;border-color:#475569}
+th.lap{white-space:normal!important;width:116px;line-height:1.3}
+.t-real .bar{min-width:40px}
+.lapsum{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:14px;padding:14px 18px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.lapsum b.ttl{font-size:16px}
+.lapsum .lg{display:inline-flex;align-items:center;gap:8px;font-size:15px}
+.lapsum .cb{pointer-events:none}
 .sm{font-size:14px;color:var(--mute)}
 .bar{display:block;height:12px;background:#DBE1E9;border-radius:6px;position:relative;min-width:70px}
 .bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--acc)}
@@ -168,6 +174,7 @@ table.t .pill{white-space:normal;border-radius:12px;line-height:1.3}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111C2A;color:#fff;padding:14px 20px;border-radius:10px;font-size:16px;font-weight:600;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 .hide{display:none!important}
 .note{font-size:15px;color:var(--ink2);background:#fff;border:1.5px dashed var(--field);border-radius:10px;padding:14px 18px}
+.note ol{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
 .steps{display:flex;gap:10px;flex-wrap:wrap}
 .step{flex:1 1 170px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .step .k{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800}
@@ -355,11 +362,7 @@ table.t .pill{white-space:normal;border-radius:12px;line-height:1.3}
   .f{min-width:0;font-size:14px}
   .f input:not([style*="width"]),.f select,.f textarea{width:100%;min-width:0}
   .drop{padding:18px 12px}
-  form.card .acts>.btn,.gform .acts>.btn{flex:1 1 0}
-  .gform{padding:16px;gap:14px}
-  .card.formbox{padding:0}
-  .formhead{padding:14px 16px}
-  .formframe{height:72vh;min-height:520px}
+  form.card .acts>.btn{flex:1 1 0}
 
   /* deret tombol yang digeser ke samping */
   .tabs,.seg{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
@@ -512,26 +515,40 @@ const viewerTim = () => ['PAUD','SD','SMP','SMA'].includes(state.role) ? state.r
 
 // alokasi & realisasi dalam juta rupiah
 let KEG = [
-  {id:1, nama:'Bimtek Perencanaan Berbasis Data PAUD', tim:'PAUD', m:'2026-03-03', s:'2026-03-05', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:420, r:412, st:'selesai'},
+  {id:1, nama:'Bimtek Perencanaan Berbasis Data PAUD', tim:'PAUD', m:'2026-03-03', s:'2026-03-05', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:420, r:412, st:'selesai', lapKeu:true, lapKeuTgl:'2026-03-09'},
   {id:2, nama:'Webinar Praktik Baik Pembelajaran PAUD', tim:'PAUD', m:'2026-10-09', s:'2026-10-09', tempat:'Daring (Zoom)', mode:'Daring', a:35, r:0, st:'perlu'},
   {id:3, nama:'Diseminasi Praktik Baik PAUD', tim:'PAUD', m:'2026-11-18', s:'2026-11-19', tempat:'Aula utama', mode:'Luring', a:150, r:0, st:'belum', resch:'11–12 Nov'},
-  {id:4, nama:'Workshop Pembelajaran Mendalam SD', tim:'SD', m:'2026-09-24', s:'2026-09-26', tempat:'Hotel, Jakarta Selatan', mode:'Luring', a:560, r:498, st:'proses'},
+  {id:4, nama:'Workshop Pembelajaran Mendalam SD', tim:'SD', m:'2026-09-24', s:'2026-09-26', tempat:'Hotel, Jakarta Selatan', mode:'Luring', a:560, r:498, st:'proses', lapKeu:true, lapKeuTgl:'2026-10-01'},
   {id:5, nama:'Monev BOSP Jakarta Barat', tim:'SD', m:'2026-10-06', s:'2026-10-08', tempat:'Sekolah sasaran, Jakarta Barat', mode:'Luring', a:95, r:0, st:'perlu'},
-  {id:6, nama:'Bimtek Aplikasi Rapor Pendidikan SD', tim:'SD', m:'2026-05-20', s:'2026-05-22', tempat:'Aula utama', mode:'Luring', a:240, r:236, st:'selesai'},
+  {id:6, nama:'Bimtek Aplikasi Rapor Pendidikan SD', tim:'SD', m:'2026-05-20', s:'2026-05-22', tempat:'Aula utama', mode:'Luring', a:240, r:236, st:'selesai', lapKeu:true, lapKeuTgl:'2026-05-26'},
   {id:7, nama:'Pendampingan Rapor Pendidikan SD', tim:'SD', m:'2026-11-10', s:'2026-11-12', tempat:'Jakarta Utara', mode:'Luring', a:180, r:0, st:'belum'},
   {id:8, nama:'Pendampingan Rapor Pendidikan SMP', tim:'SMP', m:'2026-09-29', s:'2026-10-02', tempat:'Jakarta Timur', mode:'Luring', a:310, r:188, st:'proses'},
-  {id:9, nama:'Penyusunan KOSP Jenjang SMP', tim:'SMP', m:'2026-06-10', s:'2026-06-12', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:380, r:371, st:'selesai'},
+  {id:9, nama:'Penyusunan KOSP Jenjang SMP', tim:'SMP', m:'2026-06-10', s:'2026-06-12', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:380, r:371, st:'selesai', lapKeu:true, lapKeuTgl:'2026-06-16'},
   {id:10, nama:'FGD Kurikulum SMA', tim:'SMA', m:'2026-10-14', s:'2026-10-14', tempat:'Ruang Rapat 2', mode:'Luring', a:45, r:0, st:'perlu'},
   {id:11, nama:'Penguatan Asesmen SMA', tim:'SMA', m:'2026-11-03', s:'2026-11-06', tempat:'Bogor (luar kota)', mode:'Luring', a:520, r:0, st:'belum', resch:'27–30 Okt'},
-  {id:12, nama:'Rakor Pemetaan Mutu SMA', tim:'SMA', m:'2026-07-15', s:'2026-07-16', tempat:'Aula utama', mode:'Luring', a:120, r:117, st:'selesai'},
-  {id:13, nama:'Pemetaan Mutu Satuan Pendidikan', tim:'SMP', m:'2026-02-02', s:'2026-02-04', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:640, r:628, st:'selesai'},
+  {id:12, nama:'Rakor Pemetaan Mutu SMA', tim:'SMA', m:'2026-07-15', s:'2026-07-16', tempat:'Aula utama', mode:'Luring', a:120, r:117, st:'selesai', lapKeu:true, lapKeuTgl:'2026-07-20'},
+  {id:13, nama:'Pemetaan Mutu Satuan Pendidikan', tim:'SMP', m:'2026-02-02', s:'2026-02-04', tempat:'Hotel, Jakarta Pusat', mode:'Luring', a:640, r:628, st:'selesai', lapKeu:true, lapKeuTgl:'2026-02-09'},
   {id:14, nama:'Validasi Data Rapor Pendidikan', tim:'SMP', m:'2026-10-21', s:'2026-10-23', tempat:'Daring (Zoom)', mode:'Daring', a:60, r:0, st:'perlu'},
   {id:15, nama:'Penjaminan Mutu Eksternal Kep. Seribu', tim:'SMP', m:'2026-11-25', s:'2026-11-27', tempat:'Kab. Kepulauan Seribu', mode:'Luring', a:430, r:0, st:'belum'},
-  {id:16, nama:'Rapat Koordinasi Pimpinan Triwulan IV', tim:'UMUM', m:'2026-10-09', s:'2026-10-09', tempat:'Ruang Rapat 1', mode:'Luring', a:25, r:24, st:'selesai'},
+  {id:16, nama:'Rapat Koordinasi Pimpinan Triwulan IV', tim:'UMUM', m:'2026-10-09', s:'2026-10-09', tempat:'Ruang Rapat 1', mode:'Luring', a:25, r:24, st:'selesai', lapKeu:true, lapKeuTgl:'2026-10-12'},
   {id:17, nama:'Pemeliharaan Gedung & Sarpras', tim:'UMUM', m:'2026-01-05', s:'2026-12-18', tempat:'Kantor', mode:'Luring', a:850, r:590, st:'proses', rutin:true},
   {id:18, nama:'Peringatan Hari Guru Nasional', tim:'UMUM', m:'2026-11-25', s:'2026-11-25', tempat:'Aula utama', mode:'Luring', a:90, r:0, st:'belum'},
   {id:19, nama:'Pengembangan Dashboard Layanan', tim:'UMUM', m:'2026-10-13', s:'2026-11-30', tempat:'Kantor', mode:'Luring', a:75, r:20, st:'proses', rutin:true}
 ];
+
+/* Laporan selesai tugas yang sudah tercatat di aplikasi Kearsipan.
+   Dashboard hanya MEMBACA data ini; centang kolom Arsip mengikuti isinya dan tidak bisa diubah dari Keuangan. */
+const ARSIP_LAPORAN = [
+  {keg:1, no:'ARS/LAP/031/III/2026', tgl:'2026-03-10'},
+  {keg:6, no:'ARS/LAP/118/V/2026', tgl:'2026-05-27'},
+  {keg:8, no:'ARS/LAP/241/X/2026', tgl:'2026-10-07'},
+  {keg:9, no:'ARS/LAP/142/VI/2026', tgl:'2026-06-17'},
+  {keg:12, no:'ARS/LAP/176/VII/2026', tgl:'2026-07-21'},
+  {keg:13, no:'ARS/LAP/012/II/2026', tgl:'2026-02-10'}
+];
+const ARSIP_SYNC = '28 Okt 2026, 08.00';
+const arsipOf = k => ARSIP_LAPORAN.find(a => a.keg === k.id);
+const tugasSelesai = k => !k.rutin && D(k.s) < TODAY; // laporan hanya diminta setelah kegiatan selesai
 
 const STATUS = {
   belum:{l:'Belum berjalan', c:'mu'},
@@ -568,8 +585,7 @@ const state = {
   stf:{jenis:'all', dok:'all'},
   cal:9, // bulan (0-index)
   confirmed:new Set(),
-  uploads:[],
-  form:{url:'', draft:'', err:false}
+  uploads:[]
 };
 
 /* ================= HELPERS ================= */
@@ -669,12 +685,10 @@ phoneMQ.addEventListener('change', () => rerender());
 
 /* ================= LAYOUT ================= */
 function roleSelect(dark, b){
-  const tk = ['PAUD','SD','SMP','SMA'], ur = ['KEU','KPG','TL','BMN','HMS','PRP','SRT','ARS','RT'];
-  const o = (v,l) => `<option value="${v}" ${state.role===v?'selected':''}>${l}</option>`;
+  /* belum ada akun resmi: hanya 3 peran. "User" memakai Timker PAUD & Kesetaraan sebagai contoh tim */
+  const o = (v,l,sel) => `<option value="${v}" ${(sel ?? state.role===v)?'selected':''}>${l}</option>`;
   return `<div class="rolebox"><label for="role" style="${dark?'color:#DDE6F0':''}">Lihat sebagai</label>
-    <select id="role" data-act="role">${o('pimpinan','Pimpinan (akun super)')}${o('admin', b ? BAGIAN[b].admin : 'Admin bagian (input data)')}
-      <optgroup label="Admin tim kerja">${tk.map(k => o(k, 'Admin ' + UNIT_META[k].nama)).join('')}</optgroup>
-      <optgroup label="Admin urusan Subbag Umum">${ur.map(k => o(k, 'Admin ' + UNIT_META[k].nama)).join('')}</optgroup>
+    <select id="role" data-act="role">${o('pimpinan','Super Admin')}${o('admin','Admin')}${o('PAUD','User (contoh: ' + UNIT_META.PAUD.nama + ')', isUnit())}
     </select></div>`;
 }
 
@@ -683,14 +697,14 @@ function roleBand(b, active){
   const B = BAGIAN[b], r = state.role;
   let who, ket, color, cta = '';
   if(r === 'admin'){
-    who = B.admin; color = B.accD;
-    ket = {keu:'Dapat menginput, mengimpor, dan mengubah data anggaran.', prc:'Dapat mengubah semua data, tahun anggaran, dan dokumen.', kln:'Dapat mencatat kunjungan dan melihat rincian pasien.'}[b];
+    who = 'Admin · ' + B.nama; color = B.accD;
+    ket = {keu:'Dapat memperbarui realisasi dan status anggaran. Data awal anggaran berasal dari bagian Perencanaan.', prc:'Dapat mengubah semua data, tahun anggaran, dan dokumen.', kln:'Dapat mencatat kunjungan dan melihat rincian pasien.'}[b];
   } else if(r === 'pimpinan'){
-    who = 'Pimpinan'; color = '#1F2A37';
+    who = 'Super Admin'; color = '#1F2A37';
     ket = 'Melihat seluruh data. Data tidak dapat diubah dari akun ini.';
   } else {
     const M = UNIT_META[r];
-    who = 'Admin ' + M.nama; color = M.c;
+    who = 'User · ' + M.nama; color = M.c;
     if(b === 'prc'){
       ket = `Hanya dapat mengisi dan mengubah data ${M.nama}.`;
       if(active !== '' && active !== 'capaian') cta = '<a class="btn" href="#/prc/capaian">Buka data unit saya</a>';
@@ -768,9 +782,9 @@ function vPortal(){
     <div class="card sec">
       <h2>Hak akses</h2>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))">
-        <div><b>Akun super · Pimpinan</b><div class="sm" style="font-size:15px;color:var(--ink2)">Melihat seluruh data semua bagian, termasuk daya serap keseluruhan.</div></div>
-        <div><b>Admin bagian · mis. Keuangan</b><div class="sm" style="font-size:15px;color:var(--ink2)">Punya dashboard sendiri dan dapat menginput/impor data bagiannya.</div></div>
-        <div><b>Admin tim kerja / urusan</b><div class="sm" style="font-size:15px;color:var(--ink2)">Mengisi data kinerja unitnya sendiri, mengonfirmasi kegiatan yang sudah berjalan, dan memperbarui jadwal timnya.</div></div>
+        <div><b>Super Admin · Pimpinan</b><div class="sm" style="font-size:15px;color:var(--ink2)">Melihat seluruh data semua bagian, termasuk daya serap keseluruhan.</div></div>
+        <div><b>Admin · petugas bagian</b><div class="sm" style="font-size:15px;color:var(--ink2)">Mengelola data bagiannya sendiri (mis. realisasi anggaran di Keuangan, capaian kinerja di Perencanaan).</div></div>
+        <div><b>User · tim kerja / urusan</b><div class="sm" style="font-size:15px;color:var(--ink2)">Mengisi data kinerja unitnya sendiri, mengonfirmasi kegiatan yang sudah berjalan, dan memperbarui jadwal timnya.</div></div>
       </div>
     </div>
   </main>`;
@@ -783,9 +797,7 @@ const KEU_MENU = () => [
   {p:'jadwal', l:'Jadwal'},
   {p:'st', l:'Surat tugas'},
   {p:'unggah', l:'Unggah dokumen'},
-  {p:'format', l:'Format dokumen'},
-  {p:'form', l:'Form isian'},
-  {p:'kelola', l:'Kelola data', lock:true, hidden:state.role!=='admin'}
+  {p:'format', l:'Format dokumen'}
 ];
 
 /* panel ringkas untuk admin tim kerja / urusan */
@@ -827,16 +839,19 @@ function lineChart(){
 
 function vKeu(){
   const T = totals(KEG);
-  const perlu = KEG.filter(k=>statusOf(k)==='perlu');
-  const stLewat = ST.filter(s=>s.dok==='belum' && (TODAY - D(s.s))/864e5 > 14);
+  /* notifikasi: admin tim kerja / urusan hanya melihat milik timnya sendiri; pimpinan & admin Keuangan melihat semuanya */
+  const unit = isUnit(), vt = viewerTim();
+  const perlu = KEG.filter(k=>statusOf(k)==='perlu' && (!unit || k.tim===vt));
+  const stLewat = ST.filter(s=>s.dok==='belum' && (TODAY - D(s.s))/864e5 > 14 && (!unit || s.tim===vt));
+  const linkPerlu = unit ? `data-act="goTimPerlu" data-tim="${vt}"` : 'data-act="goPerlu"';
   const target = KUMULATIF_TARGET[9];
   const perTim = Object.keys(TIM).map(t => ({t, ...totals(KEG.filter(k=>k.tim===t))}));
   const soon = KEG.filter(k => !k.rutin && D(k.s) >= TODAY && (D(k.m)-TODAY)/864e5 <= 31).sort((a,b)=>D(a.m)-D(b.m));
   return shell('keu','',KEU_MENU(), `
-  ${heading('Tahun Anggaran 2026 · data s.d. 28 Oktober 2026','Ringkasan Realisasi Anggaran', isAdmin()?'<a class="btn p" href="#/keu/kelola">Perbarui data</a>':'')}
+  ${heading('Tahun Anggaran 2026 · data s.d. 28 Oktober 2026','Ringkasan Realisasi Anggaran', isAdmin()?'<a class="btn p" href="#/keu/realisasi">Perbarui realisasi</a>':'')}
   ${keuUnitPanel()}
   <div class="grid" style="gap:10px;margin-bottom:18px">
-    ${perlu.length?`<div class="alert bad" role="alert">${svgWarn}<span><b>${perlu.length} kegiatan sudah lewat tanggal pelaksanaan tetapi belum ada realisasi</b> (termasuk kegiatan daring). <a href="#/keu/realisasi" data-act="goPerlu">Lihat daftarnya</a></span></div>`:''}
+    ${perlu.length?`<div class="alert bad" role="alert">${svgWarn}<span><b>${perlu.length} kegiatan sudah lewat tanggal pelaksanaan tetapi belum ada realisasi</b> (termasuk kegiatan daring). <a href="#/keu/realisasi" ${linkPerlu}>Lihat daftarnya</a></span></div>`:''}
     ${stLewat.length?`<div class="alert warn">${svgWarn}<span><b>${stLewat.length} perjalanan dinas</b> sudah lebih dari 14 hari selesai tetapi dokumennya belum diunggah. <a href="#/keu/st">Cek surat tugas</a></span></div>`:''}
   </div>
   <div class="grid g4">
@@ -887,8 +902,20 @@ function vKeu(){
 }
 
 function vKeuRealisasi(){
-  const {tim, st, q} = state.f;
-  let list = KEG.filter(k => (tim==='all'||k.tim===tim) && (st==='all'||statusOf(k)===st) && (!q || (k.nama+' '+k.tempat).toLowerCase().includes(q.toLowerCase())));
+  const {tim, st, q} = state.f, lap = state.f.lap || 'all';
+  const lapOk = k => lap === 'all' || (tugasSelesai(k) && (lap === 'keu' ? !k.lapKeu : !arsipOf(k)));
+  let list = KEG.filter(k => (tim==='all'||k.tim===tim) && (st==='all'||statusOf(k)===st) && lapOk(k) && (!q || (k.nama+' '+k.tempat).toLowerCase().includes(q.toLowerCase())));
+  const done = list.filter(tugasSelesai), nKeu = done.filter(k => k.lapKeu).length, nArs = done.filter(k => arsipOf(k)).length;
+  const cekKeu = k => {
+    if(!tugasSelesai(k)) return '<span class="sm">Kegiatan belum selesai</span>';
+    const adm = state.role === 'admin';
+    return `<label class="cek ${adm ? '' : 'ro'}" title="${adm ? 'Centang bila laporan sudah diterima Keuangan' : 'Diisi oleh Admin Keuangan'}"><input type="checkbox" class="cb" data-act="lapKeu" data-id="${k.id}" ${k.lapKeu ? 'checked' : ''} ${adm ? '' : 'disabled'} aria-label="Laporan ${esc(k.nama)} diterima Keuangan"><span>${k.lapKeu ? 'Sudah' : 'Belum'}</span></label>${k.lapKeu && k.lapKeuTgl ? `<div class="sm">${tgl(k.lapKeuTgl)}</div>` : ''}`;
+  };
+  const cekArs = k => {
+    if(!tugasSelesai(k)) return '<span class="sm">Kegiatan belum selesai</span>';
+    const a = arsipOf(k);
+    return `<label class="cek ro" title="${a ? 'No. arsip ' + a.no + '. ' : ''}Otomatis dari data Kearsipan, tidak dapat diubah"><input type="checkbox" class="cb auto" ${a ? 'checked' : ''} disabled aria-label="Laporan ${esc(k.nama)} tercatat di Arsip"><span>${a ? 'Tercatat' : 'Menunggu'}</span></label><div class="sm">${a ? tgl(a.tgl) : 'belum ada di arsip'}</div>`;
+  };
   const groups = Object.keys(TIM).map(t=>({t, items:list.filter(k=>k.tim===t)})).filter(g=>g.items.length);
   const T = totals(list);
   const act = k => {
@@ -899,13 +926,13 @@ function vKeuRealisasi(){
     return '<span class="sm">—</span>';
   };
   return shell('keu','realisasi',KEU_MENU(), `
-  ${heading('Tahun Anggaran 2026','Realisasi Anggaran per Kegiatan', isAdmin()?'<a class="btn" href="#/keu/kelola">Impor dari Excel</a><button class="btn p" data-act="addKeg">Tambah kegiatan</button>':'')}
-  ${isUnit()?`<div class="alert info" style="margin-bottom:14px">${svgInfo}<span>Data diinput oleh bagian keuangan. Jika kegiatan tim Anda sudah dilaksanakan tetapi statusnya belum direalisasi, tekan <b>Konfirmasi</b> agar keuangan segera memprosesnya.</span></div>`:''}
+  ${heading('Tahun Anggaran 2026','Realisasi Anggaran per Kegiatan', isAdmin()?'<button class="btn p" data-act="addKeg">Tambah kegiatan</button>':'')}
   <div class="tools">
     <label class="f">Tim kerja<select data-act="fTim"><option value="all">Semua tim kerja</option>${Object.keys(TIM).map(t=>`<option value="${t}" ${tim===t?'selected':''}>${TIM[t].nama}</option>`).join('')}</select></label>
     <label class="f">Status<select data-act="fSt"><option value="all">Semua status</option>${Object.keys(STATUS).map(s=>`<option value="${s}" ${st===s?'selected':''}>${STATUS[s].l}</option>`).join('')}</select></label>
     <label class="f" style="flex:1 1 260px">Cari kegiatan<input type="search" data-act="fQ" value="${esc(q)}" placeholder="Nama kegiatan atau tempat"></label>
-    ${(tim!=='all'||st!=='all'||q)?'<button class="btn" data-act="fReset">Reset filter</button>':''}
+    <label class="f">Laporan selesai tugas<select data-act="fLap"><option value="all">Semua</option><option value="keu" ${lap==='keu'?'selected':''}>Belum diterima Keuangan</option><option value="ars" ${lap==='ars'?'selected':''}>Belum ada di Arsip</option></select></label>
+    ${(tim!=='all'||st!=='all'||q||lap!=='all')?'<button class="btn" data-act="fReset">Reset filter</button>':''}
   </div>
   <div class="grid g4" style="margin-bottom:14px">
     <div class="card kpi"><div class="l">Alokasi (sesuai filter)</div><div class="v">${jt(T.a)}</div></div>
@@ -913,21 +940,33 @@ function vKeuRealisasi(){
     <div class="card kpi"><div class="l">Sisa</div><div class="v">${jt(T.sisa)}</div></div>
     <div class="card kpi"><div class="l">Daya serap</div><div class="v">${pf(T.p)}</div></div>
   </div>
-  <div class="tbox"><table class="t" style="min-width:1080px">
-    <thead><tr><th>Kegiatan</th><th>Jadwal &amp; tempat</th><th class="r">Alokasi</th><th class="r">Realisasi</th><th class="r">Sisa</th><th style="width:170px">Daya serap</th><th>Status</th><th>Aksi</th></tr></thead>
+  <div class="lapsum" role="note">
+    <b class="ttl">Laporan selesai tugas dari tim kerja</b>
+    <span class="lg"><input type="checkbox" class="cb" checked tabindex="-1" aria-hidden="true">Keuangan: <b>${nKeu} dari ${done.length}</b> kegiatan selesai</span>
+    <span class="lg"><input type="checkbox" class="cb auto" checked tabindex="-1" aria-hidden="true">Arsip: <b>${nArs} dari ${done.length}</b></span>
+  </div>
+  <div class="tbox"><table class="t t-real" style="min-width:1080px">
+    <thead><tr><th style="width:200px">Kegiatan</th><th class="r">Alokasi</th><th class="r">Realisasi</th><th class="r">Sisa</th><th style="width:132px">Daya serap</th><th>Status</th><th class="lap">Laporan diterima Keuangan</th><th class="lap">Laporan di Arsip (otomatis)</th><th>Aksi</th></tr></thead>
     <tbody>
     ${groups.length ? groups.map(g => { const gt = totals(g.items); return `
-      <tr class="sub"><td colspan="2"><span class="tag" style="background:${TIM[g.t].t};color:${TIM[g.t].c}">${TIM[g.t].nama}</span> <span class="sm">${g.items.length} kegiatan</span></td><td class="r num">${jt(gt.a)}</td><td class="r num">${jt(gt.r)}</td><td class="r num">${jt(gt.sisa)}</td><td><div class="barcell"><div class="bar" style="flex:1"><i style="width:${gt.p}%;background:${TIM[g.t].c}"></i></div><b>${pf(gt.p)}</b></div></td><td colspan="2"></td></tr>
+      <tr class="sub"><td><span class="tag" style="background:${TIM[g.t].t};color:${TIM[g.t].c}">${TIM[g.t].nama}</span> <span class="sm">${g.items.length} kegiatan</span></td><td class="r num">${jt(gt.a)}</td><td class="r num">${jt(gt.r)}</td><td class="r num">${jt(gt.sisa)}</td><td><div class="barcell"><div class="bar" style="flex:1"><i style="width:${gt.p}%;background:${TIM[g.t].c}"></i></div><b>${pf(gt.p)}</b></div></td><td></td><td class="num sm">${g.items.filter(k=>tugasSelesai(k)&&k.lapKeu).length} / ${g.items.filter(tugasSelesai).length}</td><td class="num sm">${g.items.filter(k=>tugasSelesai(k)&&arsipOf(k)).length} / ${g.items.filter(tugasSelesai).length}</td><td></td></tr>
       ${g.items.map(k => { const p = pct(k.r,k.a), s = statusOf(k); return `<tr>
-        <td><b>${esc(k.nama)}</b></td>
-        <td style="white-space:nowrap">${rentang(k.m,k.s)}<div class="sm">${esc(k.tempat)}</div></td>
+        <td><b>${esc(k.nama)}</b><div class="sm">${rentang(k.m,k.s)} · ${esc(k.tempat)}</div></td>
         <td class="r num">${jt(k.a)}</td><td class="r num">${jt(k.r)}</td><td class="r num">${jt(k.a-k.r)}</td>
         <td><div class="barcell"><div class="bar" style="flex:1"><i style="width:${p}%"></i></div><b>${pf(p)}</b></div></td>
         <td><span class="pill ${STATUS[s].c}">${STATUS[s].l}</span></td>
-        <td>${act(k)}</td></tr>`; }).join('')}`; }).join('') : `<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--mute)">Tidak ada kegiatan yang cocok dengan filter.</td></tr>`}
-    ${groups.length?`<tr class="tot"><td colspan="2">Total</td><td class="r num">${jt(T.a)}</td><td class="r num">${jt(T.r)}</td><td class="r num">${jt(T.sisa)}</td><td><b>${pf(T.p)}</b></td><td colspan="2"></td></tr>`:''}
+        <td>${cekKeu(k)}</td><td>${cekArs(k)}</td>
+        <td>${act(k)}</td></tr>`; }).join('')}`; }).join('') : `<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--mute)">Tidak ada kegiatan yang cocok dengan filter.</td></tr>`}
+    ${groups.length?`<tr class="tot"><td>Total</td><td class="r num">${jt(T.a)}</td><td class="r num">${jt(T.r)}</td><td class="r num">${jt(T.sisa)}</td><td><b>${pf(T.p)}</b></td><td></td><td class="num">${nKeu} / ${done.length}</td><td class="num">${nArs} / ${done.length}</td><td></td></tr>`:''}
     </tbody></table></div>
-  <p class="sm" style="margin-top:10px">Nilai dalam rupiah (jt = juta, M = miliar). Rincian per kegiatan untuk kebutuhan internal; rincian per akun belanja tidak ditampilkan.</p>
+  <div class="note sec"><b>Sumber data realisasi:</b> halaman ini menggabungkan tiga masukan data.
+    <ol>
+      <li><b>Data kegiatan</b> (nama kegiatan, tim kerja, jadwal, dan tempat) diinput oleh <b>Perencanaan</b> sebagai data awal, lalu tersinkron otomatis ke Keuangan.</li>
+      <li><b>Anggaran</b> (alokasi dan realisasi) dikelola oleh <b>Keuangan</b>. Admin Keuangan dapat mengubah status realisasi. Jika kegiatan sudah dilaksanakan tetapi belum direalisasi, tim kerja cukup menekan <b>Konfirmasi</b> agar Keuangan segera memprosesnya.</li>
+      <li><b>Laporan selesai tugas</b>, setelah kegiatan selesai: kolom <b>Keuangan</b> dicentang oleh Admin Keuangan saat laporan diterima, sedangkan kolom <b>Arsip</b> tercentang otomatis dari data Kearsipan dan tidak dapat diubah. Data arsip terakhir dibaca ${ARSIP_SYNC}.</li>
+    </ol>
+    <div style="margin-top:8px">Nilai dalam rupiah (jt = juta, M = miliar). Rincian ditampilkan per kegiatan untuk kebutuhan internal; rincian per akun belanja tidak ditampilkan.</div>
+  </div>
   `);
 }
 
@@ -936,7 +975,7 @@ function vKeuJadwal(){
   const first = new Date(yr, mo, 1);
   const start = new Date(first); const dow = (first.getDay()+6)%7; start.setDate(1-dow);
   const evs = KEG.filter(k=>!k.rutin);
-  const items = evs.map(k => ({m:D(k.m), s:D(k.s), label:k.nama, title:k.nama + ' · ' + k.tempat, style:'background:' + TIM[k.tim].t + ';color:' + TIM[k.tim].c}));
+  const items = evs.map(k => ({m:D(k.m), s:D(k.s), label:k.nama, title:k.nama + ' · ' + k.tempat + ' (klik untuk detail)', act:'kegOpen', id:k.id, style:'background:' + TIM[k.tim].t + ';color:' + TIM[k.tim].c}));
   const monthList = evs.filter(k => D(k.m).getMonth()===mo || D(k.s).getMonth()===mo).sort((a,b)=>D(a.m)-D(b.m));
   const canEdit = k => isUnit() && k.tim===viewerTim() && D(k.s) >= TODAY;
   return shell('keu','jadwal',KEU_MENU(), `
@@ -954,13 +993,13 @@ function vKeuJadwal(){
   <div class="sec">
     <h2>Daftar kegiatan ${BULAN_PANJANG[mo]}</h2>
     ${isUnit()?`<div class="alert info" style="margin-bottom:12px">${svgInfo}<span>Sebagai ${TIM[viewerTim()].nama}, Anda dapat memperbarui jadwal kegiatan tim sendiri jika ada perubahan, sehingga keuangan tidak perlu menanyakan (mis. saat memproses TUP).</span></div>`:''}
-    <div class="tbox"><table class="t" style="min-width:860px"><thead><tr><th>Tanggal</th><th>Kegiatan</th><th>Tim</th><th>Tempat</th><th>Mode</th><th>Status jadwal</th><th>Aksi</th></tr></thead><tbody>
+    <div class="tbox"><table class="t" style="min-width:860px"><thead><tr><th>Tanggal</th><th>Kegiatan</th><th>Tim</th><th>Tempat</th><th>Mode</th><th>Status jadwal</th>${isUnit()?'<th>Aksi</th>':''}</tr></thead><tbody>
     ${monthList.length?monthList.map(k=>`<tr>
       <td class="num" style="white-space:nowrap">${rentang(k.m,k.s)}</td><td><b>${esc(k.nama)}</b></td>
       <td><span class="tag" style="background:${TIM[k.tim].t};color:${TIM[k.tim].c}">${TIM[k.tim].nama}</span></td>
       <td>${esc(k.tempat)}</td><td>${k.mode}</td>
       <td>${k.resch?`<span class="pill warn">Dijadwal ulang</span><div class="sm">semula ${k.resch}</div>`:'<span class="pill ok">Sesuai rencana</span>'}</td>
-      <td>${canEdit(k)?`<button class="btn sm edit" data-act="resched" data-id="${k.id}">Ubah jadwal</button>`:'<span class="sm">—</span>'}</td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mute)">Tidak ada kegiatan pada bulan ini.</td></tr>'}
+      ${isUnit()?`<td>${canEdit(k)?`<button class="btn sm edit" data-act="resched" data-id="${k.id}">Ubah jadwal</button>`:'<span class="sm">—</span>'}</td>`:''}</tr>`).join(''):`<tr><td colspan="${isUnit()?7:6}" style="text-align:center;padding:24px;color:var(--mute)">Tidak ada kegiatan pada bulan ini.</td></tr>`}
     </tbody></table></div>
     <p class="sm" style="margin-top:10px">Jadwal awal diambil dari program yang diinput tim kerja/perencanaan di awal tahun. Perubahan jadwal oleh tim kerja otomatis terlihat di sini dan di dashboard Perencanaan.</p>
   </div>`);
@@ -970,6 +1009,7 @@ function vKeuST(){
   const {jenis, dok} = state.stf;
   const list = ST.filter(s => (jenis==='all'||s.jenis===jenis) && (dok==='all'||s.dok===dok)).sort((a,b)=>D(b.m)-D(a.m));
   const cnt = k => ST.filter(s=>s.dok===k).length;
+  const u = isUnit(); // User: biaya & aksi hanya untuk admin
   const rekap = Object.keys(TIM).map(t => { const l = ST.filter(s=>s.tim===t); return {t, n:l.length, luar:l.filter(s=>s.jenis==='Luar kota').length, ok:l.filter(s=>s.dok==='lengkap').length, biaya:l.reduce((a,s)=>a+s.biaya,0)}; }).filter(r=>r.n);
   return shell('keu','st',KEU_MENU(), `
   ${heading('Data surat tugas dari Kepegawaian','Surat Tugas &amp; Perjalanan Dinas', '<button class="btn" data-act="print">Cetak / ekspor daftar</button>')}
@@ -985,27 +1025,29 @@ function vKeuST(){
     <label class="f">Jenis perjalanan<select data-act="stJenis"><option value="all">Semua</option><option ${jenis==='Dalam kota'?'selected':''}>Dalam kota</option><option ${jenis==='Luar kota'?'selected':''}>Luar kota</option></select></label>
     <label class="f">Status dokumen<select data-act="stDok"><option value="all">Semua</option>${Object.keys(DOK).map(k=>`<option value="${k}" ${dok===k?'selected':''}>${DOK[k].l}</option>`).join('')}</select></label>
   </div>
-  <div class="tbox"><table class="t" style="min-width:1080px"><thead><tr><th>No. ST</th><th>Pegawai</th><th>Tujuan &amp; tanggal</th><th>Kegiatan</th><th>Tim</th><th>Jenis</th><th>Dokumen</th><th class="r">Biaya dilaporkan</th><th>Aksi</th></tr></thead><tbody>
+  <div class="tbox"><table class="t" style="min-width:${u?820:1080}px"><thead><tr><th>No. ST</th><th>Pegawai</th><th>Tujuan &amp; tanggal</th><th>Kegiatan</th><th>Tim</th><th>Jenis</th><th>Dokumen</th>${u?'':'<th class="r">Biaya dilaporkan</th><th>Aksi</th>'}</tr></thead><tbody>
   ${list.map(s=>`<tr>
     <td class="num sm" style="white-space:nowrap">${s.no}</td><td><b>${s.peg}</b></td>
     <td style="white-space:nowrap">${s.tujuan}<div class="sm">${rentang(s.m,s.s)}</div></td>
     <td>${esc(s.keg)}</td><td><span class="tag" style="background:${TIM[s.tim].t};color:${TIM[s.tim].c}">${s.tim==='UMUM'?'Umum':s.tim}</span></td>
     <td>${s.jenis}</td>
-    <td><span class="pill ${DOK[s.dok].c}">${DOK[s.dok].l}</span>${s.kurang?`<div class="sm">${s.kurang}</div>`:''}</td>
-    <td class="r num">${s.biaya?rp(s.biaya):'—'}</td>
-    <td>${(s.dok==='lengkap'||s.dok==='kurang') && !isUnit()?'<button class="btn sm" data-act="dl">Unduh berkas</button>':(s.dok==='belum'&&isAdmin()?'<button class="btn sm" data-act="ingat" data-peg="'+s.peg+'">Kirim pengingat</button>':'<span class="sm">—</span>')}</td></tr>`).join('')}
+    <td><span class="pill ${DOK[s.dok].c}">${DOK[s.dok].l}</span>${s.kurang && !u?`<div class="sm">${s.kurang}</div>`:''}</td>
+    ${u?'':`<td class="r num">${s.biaya?rp(s.biaya):'—'}</td>
+    <td>${(s.dok==='lengkap'||s.dok==='kurang')?'<button class="btn sm" data-act="dl">Unduh berkas</button>':(s.dok==='belum'&&isAdmin()?'<button class="btn sm" data-act="ingat" data-peg="'+s.peg+'">Kirim pengingat</button>':'<span class="sm">—</span>')}</td>`}</tr>`).join('')}
   </tbody></table></div>
   <div class="sec"><h2>Rekap per tim kerja</h2>
-  <div class="tbox"><table class="t" style="min-width:640px"><thead><tr><th>Tim kerja</th><th class="r">Perjalanan</th><th class="r">Luar kota</th><th class="r">Dokumen lengkap</th><th class="r">Total biaya dilaporkan</th></tr></thead><tbody>
-  ${rekap.map(r=>`<tr><td><b>${TIM[r.t].nama}</b></td><td class="r num">${r.n}</td><td class="r num">${r.luar}</td><td class="r num">${r.ok} / ${r.n}</td><td class="r num">${r.biaya?rp(r.biaya):'—'}</td></tr>`).join('')}
-  <tr class="tot"><td>Total</td><td class="r num">${ST.length}</td><td class="r num">${ST.filter(s=>s.jenis==='Luar kota').length}</td><td class="r num">${cnt('lengkap')} / ${ST.length}</td><td class="r num">${rp(ST.reduce((a,s)=>a+s.biaya,0))}</td></tr>
+  <div class="tbox"><table class="t" style="min-width:640px"><thead><tr><th>Tim kerja</th><th class="r">Perjalanan</th><th class="r">Luar kota</th><th class="r">Dokumen lengkap</th>${u?'':'<th class="r">Total biaya dilaporkan</th>'}</tr></thead><tbody>
+  ${rekap.map(r=>`<tr><td><b>${TIM[r.t].nama}</b></td><td class="r num">${r.n}</td><td class="r num">${r.luar}</td><td class="r num">${r.ok} / ${r.n}</td>${u?'':`<td class="r num">${r.biaya?rp(r.biaya):'—'}</td>`}</tr>`).join('')}
+  <tr class="tot"><td>Total</td><td class="r num">${ST.length}</td><td class="r num">${ST.filter(s=>s.jenis==='Luar kota').length}</td><td class="r num">${cnt('lengkap')} / ${ST.length}</td>${u?'':`<td class="r num">${rp(ST.reduce((a,s)=>a+s.biaya,0))}</td>`}</tr>
   </tbody></table></div>
   <p class="sm" style="margin-top:10px">Dokumen yang diunggah adalah salinan awal. Dokumen asli tetap diserahkan ke bagian keuangan untuk pertanggungjawaban.</p></div>
+  <div class="note sec"><b>Sumber data:</b> data surat tugas (nomor ST, pegawai, tujuan, tanggal, dan kegiatan) diambil otomatis dari <b>Kepegawaian</b>. Di Keuangan, data ini hanya ditampilkan; Keuangan melengkapinya dengan status dokumen dan biaya yang dilaporkan.</div>
   `);
 }
 
 function vKeuUnggah(){
-  const mine = ST.filter(s=>s.peg==='Andi Saputra');
+  const akun = 'Andi Saputra'; // contoh: nama pegawai dari akun yang sedang login (diisi otomatis, tidak bisa diubah)
+  const mine = ST.filter(s=>s.peg===akun);
   const rows = [['penginapan','Bukti penginapan (hotel)'],['tiket','Tiket pesawat / kereta / bus'],['transport','Transport lokal / taksi'],['lain','Pengeluaran lainnya']];
   return shell('keu','unggah',KEU_MENU(), `
   ${heading('Untuk pegawai yang melakukan perjalanan dinas','Unggah Dokumen Perjalanan Dinas')}
@@ -1013,7 +1055,7 @@ function vKeuUnggah(){
     <form class="card" style="flex:3 1 520px;min-width:0;display:flex;flex-direction:column;gap:16px" data-act="uploadForm" onsubmit="return false">
       <h2 style="margin:0">Form unggah per orang</h2>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px">
-        <label class="f">Nama pegawai<input value="Andi Saputra" readonly></label>
+        <label class="f">Nama pegawai<span style="position:relative;display:block"><input value="${esc(akun)}" readonly tabindex="-1" aria-readonly="true" style="width:100%;background:#EEF1F5;color:var(--ink2);cursor:not-allowed;padding-right:38px"><span aria-hidden="true" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;color:var(--mute)">${svgLock}</span></span><span class="sm">Terisi otomatis sesuai akun Anda</span></label>
         <label class="f">Surat tugas<select id="upST">${mine.map(s=>`<option value="${s.no}">${s.no} · ${s.tujuan} (${rentang(s.m,s.s)})</option>`).join('')}</select></label>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -1024,7 +1066,6 @@ function vKeuUnggah(){
       ${rows.map(([k,l])=>`<tr><td><b>${l}</b></td><td><label class="btn sm" style="cursor:pointer"><span id="fn_${k}">Pilih berkas</span><input type="file" class="hide" data-act="file" data-target="fn_${k}"></label></td><td class="r"><input class="num" data-act="nom" data-k="${k}" inputmode="numeric" placeholder="0" style="width:100%;min-height:44px;border:1.5px solid var(--field);border-radius:8px;padding:0 10px;text-align:right"></td></tr>`).join('')}
       <tr class="tot"><td colspan="2">Total pengeluaran dilaporkan</td><td class="r num" id="upTotal">Rp 0</td></tr>
       </tbody></table></div>
-      <label class="f">Catatan (opsional)<textarea placeholder="mis. tiket pulang menyusul karena perubahan jadwal"></textarea></label>
       <div class="acts" style="justify-content:space-between">
         <span class="sm">Salinan ini untuk verifikasi awal. Dokumen asli tetap diserahkan ke keuangan.</span>
         <button class="btn p" data-act="submitUpload">Kirim ke bagian keuangan</button>
@@ -1037,7 +1078,7 @@ function vKeuUnggah(){
       <div class="card"><h2>Riwayat unggahan</h2>
         <div id="upHist">${state.uploads.length?state.uploads.map(u=>`<div style="padding:8px 0;border-top:1px solid var(--line2)"><b>${u.st}</b><div class="sm">${u.waktu} · ${rp(u.total)}</div></div>`).join(''):'<div class="sm">Belum ada unggahan.</div>'}</div>
       </div>
-      <div class="note">Pengunggahan dilakukan <b>per orang</b>. Bagian keuangan melihatnya sudah dikelompokkan dan dijumlahkan <b>per tim kerja</b> di menu Surat tugas &amp; perjalanan dinas.</div>
+      <div class="note">Pengunggahan dilakukan <b>per orang</b>. Bagian keuangan melihatnya sudah dikelompokkan dan dijumlahkan <b>per tim kerja</b> di menu Surat tugas &amp; perjalanan dinas. Nama pegawai dan daftar surat tugas terisi otomatis dari akun Anda berdasarkan data <b>Kepegawaian</b>.</div>
     </div>
   </div>`);
 }
@@ -1064,100 +1105,6 @@ function vKeuFormat(){
     <button class="btn sm" data-act="dl">Unduh</button></div>`).join('')}
   </div>
   <p class="sm" style="margin-top:12px">Daftar format di atas contoh; format final disampaikan bagian keuangan.</p>`);
-}
-
-function vKeuKelola(){
-  if(state.role!=='admin') return shell('keu','kelola',KEU_MENU(), `<div class="card" style="text-align:center;padding:48px"><h2>Khusus Admin Keuangan</h2><p class="sm">Ganti pilihan “Lihat sebagai” menjadi Admin bagian untuk membuka menu ini.</p></div>`);
-  return shell('keu','kelola',KEU_MENU(), `
-  ${heading(`<span class="admin-chip">${svgLock}Khusus admin</span> Input data oleh bagian keuangan`,'Kelola Data Anggaran')}
-  <div class="row">
-    <div class="card" style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:14px">
-      <div class="cardhead"><h2 style="margin:0">1. Impor anggaran awal dari Excel</h2><a class="btn sm" href="#" data-act="dl">Unduh template Excel</a></div>
-      <p style="margin:0;color:var(--ink2)">Unggah file Excel anggaran per kegiatan tahun berjalan. Tidak perlu input satu per satu.</p>
-      <label class="drop" style="cursor:pointer">${svgUp}<b id="xlName">Pilih file Excel (.xlsx)</b><span class="sm">Kolom: Tim kerja · Nama kegiatan · Tanggal · Tempat · Alokasi</span><input type="file" class="hide" accept=".xlsx,.xls,.csv" data-act="file" data-target="xlName"></label>
-      <div><b style="font-size:15px">Pratinjau sebelum disimpan</b>
-        <div class="tbox" style="margin-top:6px"><table class="t"><thead><tr><th>Tim</th><th>Kegiatan</th><th class="r">Alokasi</th><th>Cek</th></tr></thead><tbody>
-          ${KEG.slice(0,5).map(k=>`<tr><td>${k.tim}</td><td>${esc(k.nama)}</td><td class="r num">${jt(k.a)}</td><td><span class="pill ok">Valid</span></td></tr>`).join('')}
-          <tr><td>SMA</td><td>Rapat evaluasi akhir tahun</td><td class="r num">—</td><td><span class="pill bad">Alokasi kosong</span></td></tr>
-        </tbody></table></div></div>
-      <div class="acts" style="justify-content:flex-end;margin-top:auto"><button class="btn p" data-act="import">Simpan ${KEG.length} kegiatan</button></div>
-    </div>
-    <div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:16px">
-      <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <h2 style="margin:0">2. Input realisasi &amp; revisi anggaran</h2>
-        <label class="f">Kegiatan<select id="kSel">${KEG.map(k=>`<option value="${k.id}">${TIM[k.tim].nama} · ${esc(k.nama)}</option>`).join('')}</select></label>
-        <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-          <label class="f">Alokasi (juta Rp)<input id="kA" class="num" inputmode="decimal" value="${KEG[0].a}"></label>
-          <label class="f">Realisasi (juta Rp)<input id="kR" class="num" inputmode="decimal" value="${KEG[0].r}"></label>
-        </div>
-        <label class="f">Status<select id="kS">${['belum','perlu','proses','selesai'].map(s=>`<option value="${s}" ${KEG[0].st===s?'selected':''}>${STATUS[s].l}</option>`).join('')}</select></label>
-        <button class="btn p" data-act="saveReal">Simpan perubahan</button>
-        <span class="sm">Revisi anggaran di tengah tahun cukup mengubah alokasi kegiatan terkait.</span>
-      </div>
-      <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <h2 style="margin:0">3. Form isian (Google Form)</h2>
-        <div><span class="pill ${state.form.url ? 'ok' : 'warn'}">${state.form.url ? 'Google Form sudah terpasang' : 'Belum dipasang · tampil contoh'}</span></div>
-        <p style="margin:0;color:var(--ink2)">Form dibuat di Google Form lalu ditampilkan di menu Form isian, sehingga pertanyaannya mudah diubah tanpa mengubah aplikasi.</p>
-        <a class="btn p" href="#/keu/form">Buka dan atur Form isian</a>
-      </div>
-    </div>
-  </div>
-  <div class="sec"><h2>Pengaturan hak akses</h2>
-  <div class="tbox"><table class="t" style="min-width:720px"><thead><tr><th>Jenis akun</th><th>Contoh pengguna</th><th>Melihat</th><th>Input / ubah</th><th>Konfirmasi kegiatan</th></tr></thead><tbody>
-    <tr><td><b>Super</b></td><td>Pimpinan</td><td><span class="pill ok">Semua data</span></td><td><span class="pill mu">Tidak</span></td><td><span class="pill mu">Tidak</span></td></tr>
-    <tr><td><b>Bagian</b></td><td>Admin Keuangan</td><td><span class="pill ok">Data keuangan</span></td><td><span class="pill ok">Ya</span></td><td><span class="pill mu">—</span></td></tr>
-    <tr><td><b>Admin tim kerja / urusan</b></td><td>Ketua &amp; anggota tim kerja</td><td><span class="pill ok">Realisasi &amp; jadwal</span></td><td><span class="pill warn">Jadwal tim sendiri</span></td><td><span class="pill ok">Ya</span></td></tr>
-  </tbody></table></div></div>
-  <p class="sm" style="margin-top:10px">Format impor dibuat tetap, sehingga file tahun berikutnya bisa diimpor dengan cara yang sama.</p>
-  `);
-}
-
-/* ---------- area penyajian form ---------- */
-function formEmbedUrl(raw){
-  const m = raw.match(/src=["']([^"']+)["']/); // boleh menempel kode sematan utuh
-  try{
-    const u = new URL(m ? m[1] : raw.trim());
-    if(u.protocol !== 'https:' || u.hostname !== 'docs.google.com' || !/^\/forms\/.+\/viewform$/.test(u.pathname)) return null;
-    u.searchParams.set('embedded', 'true');
-    return u.href;
-  }catch(err){ return null; }
-}
-function vKeuForm(){
-  const F = state.form, t = isUnit() ? viewerTim() : null;
-  const kegOpts = KEG.filter(k => !t || k.tim === t).map(k => `<option value="${k.id}">${TIM[k.tim].nama} · ${esc(k.nama)}</option>`).join('');
-  const q = (label, ctl) => `<label class="f"><span>${label} <span class="wajib">*</span></span>${ctl}</label>`;
-  const contoh = `<form class="gform" onsubmit="return false">
-      ${q('Nama pengisi', '<input required placeholder="Tulis nama lengkap">')}
-      ${q('Kegiatan', `<select required><option value="">Pilih kegiatan</option>${kegOpts}</select>`)}
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:18px">
-        ${q('Tanggal selesai', '<input type="date" required>')}
-        ${q('Nilai realisasi (Rp)', '<input class="num" inputmode="numeric" required placeholder="0">')}
-      </div>
-      <label class="f"><span>Keterangan (boleh dikosongkan)</span><textarea placeholder="Tulis catatan jika ada"></textarea></label>
-      <div class="acts" style="justify-content:flex-end"><button type="reset" class="btn">Kosongkan</button><button class="btn p" data-act="formSend">Kirim jawaban</button></div>
-    </form>`;
-  const tabBaru = F.url ? F.url.replace(/([?&])embedded=true&?/, '$1').replace(/[?&]$/, '') : '';
-  return shell('keu','form',KEU_MENU(), `
-  ${heading('Formulir untuk pegawai dan tim kerja', 'Form Isian', F.url ? `<a class="btn" href="${esc(tabBaru)}" target="_blank" rel="noopener">Buka di tab baru</a>` : '')}
-  <div class="row" style="align-items:flex-start">
-    <section class="card formbox" style="flex:3 1 560px;min-width:0" aria-label="Area penyajian form">
-      <div class="formhead"><div><h2>Laporan Realisasi Kegiatan</h2><div class="sm">Diisi setelah kegiatan selesai agar bagian keuangan dapat segera memprosesnya.</div></div>
-        <span class="pill ${F.url ? 'ok' : 'warn'}">${F.url ? 'Google Form terpasang' : 'Contoh tampilan'}</span></div>
-      ${F.url ? `<iframe class="formframe" src="${esc(F.url)}" title="Google Form Laporan Realisasi Kegiatan"></iframe>` : contoh}
-    </section>
-    <aside style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px">
-      <div class="card"><h2>Cara mengisi</h2>
-        <ol class="howto"><li>Isi semua kolom bertanda <span class="wajib">*</span></li><li>Periksa kembali nilai realisasi.</li><li>Tekan <b>Kirim jawaban</b>.</li></ol>
-        ${F.url ? '<p class="sm" style="margin:12px 0 0">Jika form tidak muncul, tekan <b>Buka di tab baru</b> di bagian atas halaman.</p>' : ''}</div>
-      ${isAdmin() ? `<div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <div class="cardhead"><h2 style="margin:0">Pasang Google Form</h2><span class="admin-chip">${svgLock}Khusus admin</span></div>
-        <p style="margin:0;color:var(--ink2)">Di Google Form, tekan <b>Kirim</b>, pilih tab <b>&lt; &gt;</b>, salin kodenya, lalu tempel di bawah ini.</p>
-        <label class="f"><span>Kode atau tautan Google Form</span><textarea id="fmUrl" placeholder="Tempel di sini">${esc(F.draft)}</textarea></label>
-        ${F.err ? `<div class="alert bad">${svgWarn}<span>Tautan belum sesuai. Gunakan kode dari tab &lt; &gt;, bukan tautan edit atau tautan singkat forms.gle.</span></div>` : ''}
-        <div class="acts" style="justify-content:flex-end">${F.url ? '<button class="btn" data-act="formClear">Lepas form</button>' : ''}<button class="btn p" data-act="formSet">Terapkan</button></div>
-      </div>` : ''}
-    </aside>
-  </div>`);
 }
 
 /* ================= PERENCANAAN ================= */
@@ -1602,6 +1549,9 @@ function vPrc(){
   </div>`);
 }
 
+/* catatan sumber data: pengukuran kinerja dikerjakan Tim Pengukuran di website tersendiri; Perencanaan hanya menampilkan */
+const PRC_SUMBER = `<div class="note sec"><b>Sumber data:</b> data capaian dan pengukuran kinerja diambil dari <b>Tim Pengukuran</b> melalui website pelaporan triwulan (<a href="https://triwulan-report-and-visualization.vercel.app" target="_blank" rel="noopener">triwulan-report-and-visualization.vercel.app</a>). Di Perencanaan, data ini hanya ditampilkan; pengisian dan pembaruannya dilakukan di website tersebut.</div>`;
+
 /* ---------- CAPAIAN PER UNIT ---------- */
 function vPrcCapaian(){
   if(isUnit() && UNIT_META[state.role]) PRC.unitSel = state.role;
@@ -1639,6 +1589,7 @@ function vPrcCapaian(){
         <td>${allow ? `<button class="btn sm edit" data-act="editItem" data-k="${k}" data-i="${idx}">Isi / ubah</button>` : '<span class="sm">—</span>'}</td></tr>`).join('')).join('')}
       </tbody></table></div></div>`).join('')}
   <div class="note sec"><b>Cara hitung:</b> ${timker ? 'capaian triwulan = realisasi ÷ target triwulan; progres tahunan = realisasi triwulan terakhir yang sudah diisi ÷ target TW4. Nilai di atas 100% tetap ditampilkan, tetapi dihitung maksimal 100% saat dirata-rata.' : 'progres = jumlah realisasi TW1 s.d. TW berjalan ÷ rencana output (untuk output berbentuk persen: realisasi terakhir ÷ target). Nilai di atas 100% dihitung maksimal 100% saat dirata-rata.'}</div>
+  ${PRC_SUMBER}
   `);
 }
 
@@ -1672,7 +1623,7 @@ function vPrcPengukuran(){
       <div class="tbox" style="border:none"><table class="t" style="min-width:720px"><thead><tr><th>Indikator</th>${TIMKER_KEYS.map(k => `<th class="r" style="${k===own?'color:var(--accD)':''}">${UNIT_META[k].s}</th>`).join('')}<th class="r">Rerata</th><th class="r">Bobot</th><th class="r">Nilai</th></tr></thead>
         <tbody>${a.rows.map(r => `<tr><td><b>${r.l}</b><div class="sm">Sumber: ${r.src}</div></td>${r.v.map((v,i) => `<td class="r num" style="${TIMKER_KEYS[i]===own?'background:var(--accT);font-weight:800':''}">${maskCol(TIMKER_KEYS[i])?'<span class="sm">•••</span>':pp(v)}</td>`).join('')}<td class="r num"><b>${pp(r.avg)}</b></td><td class="r num">${r.b}%</td><td class="r num"><b>${pp(r.nilai)}</b></td></tr>`).join('')}
           <tr class="tot"><td colspan="7">Capaian antara IKK ${ikk} · Triwulan ${q} (bobot tertimbang)</td><td class="r num">${pp(a.total)}</td></tr></tbody></table></div>
-      ${own ? '<p class="sm">Nilai unit lain disembunyikan (•••) untuk akun admin unit. Rerata dan total tetap ditampilkan.</p>' : ''}
+      ${own ? '<p class="sm">Nilai unit lain disembunyikan (•••) untuk akun User. Rerata dan total tetap ditampilkan.</p>' : ''}
       <p class="sm" style="margin:6px 0 0">Basis kegiatan dan basis anggaran di mockup ini masih angka contoh; di aplikasi nyata diambil dari jadwal kegiatan dan modul Keuangan.</p>
     </div>
   </div>` : ''}
@@ -1713,6 +1664,7 @@ function vPrcPengukuran(){
       ${own ? '<p class="sm">Progres unit lain hanya terlihat oleh pimpinan dan admin perencanaan.</p>' : ''}
       <div class="legend" style="margin-top:8px"><span><i style="background:#166534"></i>≥ 85%</span><span><i style="background:var(--acc)"></i>60–84%</span><span><i style="background:#E08A1E"></i>&lt; 60%</span></div></div>
   </div>` : ''}
+  ${PRC_SUMBER}
   `);
 }
 
@@ -1902,12 +1854,11 @@ function vPrcKelola(){
       ${['Sheet Timker SD masih berjudul "Laporan Capaian Kinerja 2025".','Timker SMA: target TW4 ditulis 100 (bukan 100%) pada 3 indikator; beberapa rumus rerata berisi #REF! dan #VALUE!; capaian diketik sebagai teks "0,00%".','Timker SMA: 8 indikator IKK 1.1 (Digitalisasi Pembelajaran, Penguatan Pendidikan Karakter, MBG) dicatat ulang di blok IKK 1.2, sehingga ikut terhitung dua kali.','Timker SMP: realisasi TW2 diisi "NA" dan TW3 kosong, sehingga capaian PK SMP terhitung 0%.','Timker PAUD: target TW1 salah satu indikator berisi rumus ke sel kosong (=-E939).','Urusan: kolom "Persentase Capaian" dihitung dengan cara berbeda-beda (sebagian manual, sebagian rumus, sebagian kosong).','Sel yang digabung (merge) membuat satu kegiatan tersebar di beberapa baris (mis. Perencanaan dan Keuangan).'].map(x => `<div style="display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line2);font-size:15px"><span style="color:#B45309;flex-shrink:0">${svgWarn}</span><span>${x}</span></div>`).join('')}</div>
     <div class="card" style="flex:1 1 420px;min-width:0"><h2>Hak akses bagian Perencanaan</h2>
       <div class="tbox" style="border:none"><table class="t"><thead><tr><th>Peran</th><th>Melihat</th><th>Mengubah</th></tr></thead><tbody>
-        <tr><td><b>Pimpinan</b></td><td>Semua unit &amp; ringkasan</td><td><span class="pill mu">Tidak</span></td></tr>
-        <tr><td><b>Admin Perencanaan</b></td><td>Semua unit</td><td>Semua data, tahun, impor, bobot, dokumen, kalender</td></tr>
-        <tr><td><b>Admin tim kerja</b><div class="sm">mis. Timker SMA</div></td><td>Ringkasan lembaga + rincian tim sendiri</td><td>Realisasi tim sendiri, agenda tim sendiri</td></tr>
-        <tr><td><b>Admin urusan</b><div class="sm">mis. Urusan Keuangan</div></td><td>Ringkasan lembaga + rincian urusan sendiri</td><td>Realisasi urusan sendiri, agenda urusan sendiri</td></tr>
+        <tr><td><b>Super Admin</b></td><td>Semua unit &amp; ringkasan</td><td><span class="pill mu">Tidak</span></td></tr>
+        <tr><td><b>Admin</b></td><td>Semua unit</td><td>Semua data, tahun, impor, bobot, dokumen, kalender</td></tr>
+        <tr><td><b>User</b><div class="sm">tim kerja / urusan</div></td><td>Ringkasan lembaga + rincian unit sendiri</td><td>Realisasi unit sendiri, agenda unit sendiri</td></tr>
       </tbody></table></div>
-      <p class="sm" style="margin:8px 0 0">Coba pilih “Lihat sebagai → Admin Timker SMA” di kanan atas untuk melihat bedanya.</p></div>
+      <p class="sm" style="margin:8px 0 0">Coba pilih “Lihat sebagai → User” di kanan atas untuk melihat bedanya.</p></div>
   </div>`);
 }
 
@@ -1957,7 +1908,7 @@ function prcClick(el, a, e){
         <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Tutup</button></div></div></div>`; return true; }
     case 'kegOpen': { const k = KEG.find(x => x.id == el.dataset.id);
       $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><span class="tag" style="align-self:flex-start;background:${TIM[k.tim].t};color:${TIM[k.tim].c}">Kegiatan ${TIM[k.tim].nama}</span><h3 id="mt">${esc(k.nama)}</h3>
-        <div>${rentang(k.m,k.s)} 2026 · ${esc(k.tempat)} · ${k.mode}</div>${k.resch ? `<div><span class="pill warn">Dijadwal ulang</span> <span class="sm">semula ${k.resch}</span></div>` : ''}<div class="sm">Data dari program kegiatan tim kerja; sama dengan kalender Keuangan. Perubahan jadwal dilakukan oleh tim kerja terkait.</div>
+        <div>${rentang(k.m,k.s)} 2026 · ${esc(k.tempat)} · ${k.mode}</div>${k.resch ? `<div><span class="pill warn">Dijadwal ulang</span> <span class="sm">semula ${k.resch}</span></div>` : ''}<div class="sm">${location.hash.startsWith('#/keu') ? 'Data dari program yang diinput tim kerja/Perencanaan, sama dengan kalender di dashboard Perencanaan. Perubahan jadwal dilakukan oleh tim kerja terkait.' : 'Data dari program kegiatan tim kerja; sama dengan kalender Keuangan. Perubahan jadwal dilakukan oleh tim kerja terkait.'}</div>
         <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Tutup</button></div></div></div>`; return true; }
     case 'evSave': {
       const j = $('#aJ').value.trim(), m = $('#aM').value, s = $('#aS').value || m;
@@ -2302,7 +2253,7 @@ function klnInput(el, a){
 
 /* ================= ROUTER ================= */
 const ROUTES = {
-  '':vPortal, 'keu':vKeu, 'keu/realisasi':vKeuRealisasi, 'keu/jadwal':vKeuJadwal, 'keu/st':vKeuST, 'keu/unggah':vKeuUnggah, 'keu/format':vKeuFormat, 'keu/form':vKeuForm, 'keu/kelola':vKeuKelola,
+  '':vPortal, 'keu':vKeu, 'keu/realisasi':vKeuRealisasi, 'keu/jadwal':vKeuJadwal, 'keu/st':vKeuST, 'keu/unggah':vKeuUnggah, 'keu/format':vKeuFormat,
   'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/kelola':vPrcKelola, 'kln':vKln, 'kln/obat':vKlnObat
 };
 function route(){
@@ -2325,10 +2276,16 @@ document.addEventListener('change', e => {
   if(a==='role'){ state.role = e.target.value; rerender(); toast('Tampilan: ' + e.target.options[e.target.selectedIndex].text); }
   if(a==='fTim'){ state.f.tim = e.target.value; rerender(); }
   if(a==='fSt'){ state.f.st = e.target.value; rerender(); }
+  if(a==='fLap'){ state.f.lap = e.target.value; rerender(); }
+  if(a==='lapKeu'){
+    const k = KEG.find(x => x.id == e.target.dataset.id);
+    if(state.role !== 'admin' || !k){ rerender(); return; } // hanya Admin Keuangan yang boleh mencentang
+    k.lapKeu = e.target.checked; k.lapKeuTgl = k.lapKeu ? iso(TODAY) : null;
+    rerender(); toast(k.lapKeu ? 'Laporan ' + k.nama + ' ditandai sudah diterima Keuangan' : 'Tanda laporan diterima Keuangan dibatalkan');
+  }
   if(a==='stJenis'){ state.stf.jenis = e.target.value; rerender(); }
   if(a==='stDok'){ state.stf.dok = e.target.value; rerender(); }
   if(a==='file'){ const f = e.target.files[0]; if(f){ const t = document.getElementById(e.target.dataset.target); if(t) t.textContent = f.name; } }
-  if(e.target.id==='kSel'){ const k = KEG.find(x=>x.id==e.target.value); $('#kA').value=k.a; $('#kR').value=k.r; $('#kS').value=k.st; }
 });
 document.addEventListener('input', e => {
   const a = e.target.dataset.act;
@@ -2349,14 +2306,7 @@ document.addEventListener('click', e => {
   if(a==='goPerlu'){ state.f = {tim:'all', st:'perlu', q:''}; }
   if(a==='goTim'){ state.f = {tim:el.dataset.tim, st:'all', q:''}; }
   if(a==='goTimPerlu'){ state.f = {tim:el.dataset.tim, st:'perlu', q:''}; }
-  if(a==='formSend'){ const f = el.closest('form'); if(f.reportValidity()){ f.reset(); toast('Jawaban terkirim (simulasi mockup)'); } }
-  if(a==='formSet'){
-    const raw = $('#fmUrl').value, url = formEmbedUrl(raw);
-    state.form = url ? {url, draft:'', err:false} : {url:state.form.url, draft:raw, err:true};
-    rerender(); if(url) toast('Google Form terpasang');
-  }
-  if(a==='formClear'){ state.form = {url:'', draft:'', err:false}; rerender(); toast('Kembali ke contoh tampilan'); }
-  if(a==='fReset'){ state.f = {tim:'all', st:'all', q:''}; rerender(); }
+  if(a==='fReset'){ state.f = {tim:'all', st:'all', q:'', lap:'all'}; rerender(); }
   if(a==='calPrev'){ state.cal--; rerender(); }
   if(a==='calNext'){ state.cal++; rerender(); }
   if(a==='calToday'){ state.cal = 9; rerender(); }
@@ -2366,12 +2316,6 @@ document.addEventListener('click', e => {
   if(a==='ingat'){ toast('Pengingat unggah dokumen dikirim ke ' + el.dataset.peg); }
   if(a==='toastOnly'){ toast(el.dataset.msg); }
   if(a==='addFormat'||a==='addKeg'){ toast('Form input dibuka (simulasi mockup)'); }
-  if(a==='import'){ toast('Data anggaran tersimpan (simulasi mockup)'); }
-  if(a==='saveReal'){
-    const k = KEG.find(x=>x.id==$('#kSel').value);
-    k.a = Number(String($('#kA').value).replace(',','.'))||k.a; k.r = Number(String($('#kR').value).replace(',','.'))||0; k.st = $('#kS').value;
-    toast('Tersimpan: ' + k.nama + ' — cek di menu Realisasi');
-  }
   if(a==='submitUpload'){
     const total = Number(($('#upTotal').textContent).replace(/[^0-9]/g,''));
     const stNo = $('#upST').value;
