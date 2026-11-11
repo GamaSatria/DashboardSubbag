@@ -698,7 +698,7 @@ function roleBand(b, active){
   let who, ket, color, cta = '';
   if(r === 'admin'){
     who = 'Admin · ' + B.nama; color = B.accD;
-    ket = {keu:'Mengisi seluruh anggaran (alokasi, realisasi, status). Daftar kegiatan dan jadwalnya berasal dari bagian Perencanaan.', prc:'Dapat mengubah semua data, tahun anggaran, dan dokumen.', kln:'Dapat mencatat kunjungan dan melihat rincian pasien.'}[b];
+    ket = {keu:'Mengisi seluruh anggaran (alokasi, realisasi, status). Daftar kegiatan dan jadwalnya berasal dari bagian Perencanaan.', prc:'Mengelola program kegiatan, kalender, dan dokumen. Data capaian ditampilkan dari Tim Pengukuran.', kln:'Dapat mencatat kunjungan dan melihat rincian pasien.'}[b];
   } else if(r === 'pimpinan'){
     who = 'Super Admin'; color = '#1F2A37';
     ket = 'Melihat seluruh data. Data tidak dapat diubah dari akun ini.';
@@ -706,8 +706,8 @@ function roleBand(b, active){
     const M = UNIT_META[r];
     who = 'User · ' + M.nama; color = M.c;
     if(b === 'prc'){
-      ket = `Hanya dapat mengisi dan mengubah data ${M.nama}.`;
-      if(active !== '' && active !== 'capaian') cta = '<a class="btn" href="#/prc/capaian">Buka data unit saya</a>';
+      ket = `Hanya dapat melihat data kinerja ${M.nama}. Data bersumber dari Tim Pengukuran.`;
+      if(active !== '' && active !== 'capaian') cta = '<a class="btn" href="#/prc/capaian">Lihat data unit saya</a>';
     } else if(b === 'keu'){
       const t = viewerTim();
       ket = `Dapat mengonfirmasi kegiatan dan memperbarui jadwal ${TIM[t].nama}.`;
@@ -1273,12 +1273,12 @@ function prcUnitPanel(){
   const k = state.role, M = UNIT_META[k], s = unitStat(k), tw = TWc(), timker = M.jenis === 'timker';
   return `<section class="upanel" style="--uc:${M.c};--ut:${M.t};--acc:${M.c};--accD:${M.c}" aria-label="Data ${M.nama}">
     <div class="uphead"><div><div class="uplbl">Data unit Anda</div><h2>${M.nama}</h2></div>
-      <a class="btn p" href="#/prc/capaian">${s.miss ? `Isi ${s.miss} data yang belum lengkap` : 'Buka data unit saya'}</a></div>
+      <a class="btn p" href="#/prc/capaian">Lihat data unit saya</a></div>
     <div class="upstats">
       <div><span>${timker ? 'Jumlah indikator' : 'Jumlah kegiatan'}</span><b>${s.n}</b></div>
       <div><span>Progres tahunan</span><b>${pp(s.prog)}</b></div>
       <div><span>${timker ? 'Capaian triwulan ' + tw : 'Selesai 100%'}</span><b>${timker ? pp(s.capTW) : s.done + ' / ' + s.n}</b></div>
-      <div class="${s.miss ? 'is-bad' : ''}"><span>Belum diisi s.d. TW${tw}</span><b>${s.miss}</b></div>
+      <div class="${s.miss ? 'is-bad' : ''}"><span>Belum ada data s.d. TW${tw}</span><b>${s.miss}</b></div>
     </div></section>`;
 }
 
@@ -1525,7 +1525,7 @@ function unitBars(keys, own){
 /* ---------- menu & shell ---------- */
 const PRC_MENU = () => [
   {p:'', l:'Beranda'}, {p:'capaian', l: isUnit() ? 'Data unit saya' : 'Capaian per unit'}, {p:'pengukuran', l:'Pengukuran IKK'}, {p:'kalender', l:'Kalender'},
-  {p:'kegiatan', l:'Program kegiatan', hidden: state.role !== 'admin'}, {p:'struktur', l:'Struktur kinerja'}, {p:'unduh', l:'Pusat unduhan'}, {p:'kelola', l:'Kelola data', lock:true, hidden: state.role !== 'admin'}
+  {p:'kegiatan', l:'Program kegiatan', hidden: state.role !== 'admin'}, {p:'struktur', l:'Struktur kinerja'}, {p:'unduh', l:'Pusat unduhan'}
 ];
 const yearSel = () => `<label class="yearbox">Tahun<select data-act="prcYear">${Object.keys(PRC.years).map(y => `<option value="${y}" ${+y===PRC.year?'selected':''}>${y}</option>`).join('')}</select></label>`;
 const prcCrumb = s => `Perencanaan · Tahun ${PRC.year} · data s.d. Triwulan ${TWc()}${s ? ' · ' + s : ''}`;
@@ -1544,7 +1544,7 @@ function vPrc(){
   const now = new Date(TODAY); const soon = occurrences(now, new Date(now.getFullYear(), now.getMonth(), now.getDate()+45)).filter(o => o.s >= now).slice(0,5);
   const serap = [[2020,95.07],[2021,99.07],[2022,99.46],[2023,99.72],[2024,97.64],[2025,99.41]];
   return shell('prc','',PRC_MENU(), `
-  ${heading(prcCrumb(), 'Ringkasan Kinerja Lembaga', yearSel() + (prcIsAdmin() ? '<a class="btn p" href="#/prc/kelola">Perbarui data</a>' : ''))}
+  ${heading(prcCrumb(), 'Ringkasan Kinerja Lembaga', yearSel())}
   ${prcUnitPanel()}
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))">
     ${ikk.map(i => `<a class="card ikk" href="#/prc/pengukuran" data-act="goIkk" data-ikk="${i.k}">
@@ -1623,9 +1623,9 @@ function vPrcCapaian(){
       <div class="seg">${URUSAN_KEYS.map(u => `<button data-act="unitSel" data-k="${u}" class="${u===k?'on':''}">${UNIT_META[u].s} <span style="opacity:.8">· ${pp(unitStat(u).prog)}</span></button>`).join('')}</div>
     </div>`;
   const cellT = (it, i) => { const t = it.t[i], r = it.r[i], fut = i+1 > tw, miss = !fut && t != null && t > 0 && r == null;
-    return `<td class="num" style="white-space:nowrap;${miss?'background:#FFF7E6':''}"><span class="sm">${t==null?'—':pp(t)}</span><br><b>${r==null ? (miss ? '<span class="pill warn">belum diisi</span>' : '—') : pp(r)}</b></td>`; };
+    return `<td class="num" style="white-space:nowrap;${miss?'background:#FFF7E6':''}"><span class="sm">${t==null?'—':pp(t)}</span><br><b>${r==null ? (miss ? '<span class="pill warn">belum ada data</span>' : '—') : pp(r)}</b></td>`; };
   const cellU = (it, i) => { const r = it.r[i], fut = i+1 > tw, miss = !fut && r == null && it.r.slice(0,tw).every(x => x == null) && i === 0;
-    return `<td class="r num" style="${r==null&&!fut&&itemMissing(it)?'background:#FFF7E6':''}">${r==null ? (miss ? '<span class="pill warn">belum diisi</span>' : '—') : vfmt(r, it.tipe==='persen')}</td>`; };
+    return `<td class="r num" style="${r==null&&!fut&&itemMissing(it)?'background:#FFF7E6':''}">${r==null ? (miss ? '<span class="pill warn">belum ada data</span>' : '—') : vfmt(r, it.tipe==='persen')}</td>`; };
   const progCell = it => { const raw = itemRaw(it), p = itemProg(it); return `<td style="min-width:150px"><div class="barcell"><div class="bar" style="flex:1"><i style="width:${(p||0)*100}%;background:${progColor(p)}"></i></div><b>${pp(raw)}</b></div></td>`; };
   return shell('prc','capaian',PRC_MENU(), `
   ${heading(prcCrumb(), isUnit() ? 'Data Kinerja ' + M.nama : 'Laporan Capaian Kinerja per Unit', yearSel() + (allow ? `<button class="btn" data-act="dlUnit" data-k="${k}">Unduh data unit</button>` : ''))}
@@ -1634,16 +1634,15 @@ function vPrcCapaian(){
     <div class="card kpi"><div class="l">${M.nama}</div><div class="v">${s.n}</div><div class="n">${timker ? 'indikator kinerja inisiatif (IKI)' : 'kegiatan / output'}</div></div>
     <div class="card kpi"><div class="l">Progres penyelesaian tahunan</div><div class="v" style="color:${progColor(s.prog)}">${pp(s.prog)}</div><div class="n">${timker ? 'realisasi terakhir ÷ target akhir tahun' : 'jumlah realisasi ÷ rencana output'}</div></div>
     <div class="card kpi"><div class="l">${timker ? 'Capaian triwulan '+tw : 'Selesai 100%'}</div><div class="v">${timker ? pp(s.capTW) : s.done + ' / ' + s.n}</div><div class="n">${timker ? 'realisasi ÷ target TW'+tw : 'kegiatan sudah tuntas'}</div></div>
-    <div class="card kpi"><div class="l">Belum diisi s.d. TW${tw}</div><div class="v" style="color:${s.miss?'var(--bad)':'var(--ok)'}">${s.miss}</div><div class="n">${s.miss ? 'ditandai kuning di tabel' : 'semua sudah dilaporkan'}</div></div>
+    <div class="card kpi"><div class="l">Belum ada data s.d. TW${tw}</div><div class="v" style="color:${s.miss?'var(--bad)':'var(--ok)'}">${s.miss}</div><div class="n">${s.miss ? 'ditandai kuning di tabel' : 'semua sudah dilaporkan'}</div></div>
   </div>
   ${groups.map(g => `<div class="sec"><h2>IKK ${g.ikk} <span class="sm" style="font-weight:600">· ${g.ikk==='1.1'?'Satuan pendidikan memanfaatkan hasil asesmen nasional':g.ikk==='1.2'?'Daerah memenuhi SPM pendidikan':g.ikk==='2.1'?'Nilai Kinerja Anggaran':'Predikat SAKIP'}</span></h2>
-    <div class="tbox"><table class="t" style="min-width:${timker?1040:960}px">
-      <thead><tr><th>${timker?'Indikator kinerja inisiatif':'Kegiatan'}</th>${timker ? [1,2,3,4].map(q => `<th class="num" style="white-space:normal">TW${q}<div class="sm" style="font-weight:500">target / realisasi</div></th>`).join('') + `<th>Capaian TW${tw}</th>` : `<th class="r">Rencana</th>${[1,2,3,4].map(q => `<th class="r">TW${q}</th>`).join('')}`}<th>Progres tahunan</th><th>Aksi</th></tr></thead>
-      <tbody>${g.progs.map(p => `<tr class="sub"><td colspan="${timker?8:8}">${esc(p.n || 'Program')}</td></tr>` + p.items.map(({it, idx}) => `<tr>
+    <div class="tbox"><table class="t" style="min-width:${timker?940:860}px">
+      <thead><tr><th>${timker?'Indikator kinerja inisiatif':'Kegiatan'}</th>${timker ? [1,2,3,4].map(q => `<th class="num" style="white-space:normal">TW${q}<div class="sm" style="font-weight:500">target / realisasi</div></th>`).join('') + `<th>Capaian TW${tw}</th>` : `<th class="r">Rencana</th>${[1,2,3,4].map(q => `<th class="r">TW${q}</th>`).join('')}`}<th>Progres tahunan</th></tr></thead>
+      <tbody>${g.progs.map(p => `<tr class="sub"><td colspan="7">${esc(p.n || 'Program')}</td></tr>` + p.items.map(({it, idx}) => `<tr>
         <td style="max-width:420px">${esc(it.ind)}</td>
         ${timker ? [0,1,2,3].map(i => cellT(it,i)).join('') + `<td><b>${pp(itemCapTW(it,tw))}</b></td>` : `<td class="r" style="white-space:nowrap">${esc(it.rlabel||'')}</td>${[0,1,2,3].map(i => cellU(it,i)).join('')}`}
-        ${progCell(it)}
-        <td>${allow ? `<button class="btn sm edit" data-act="editItem" data-k="${k}" data-i="${idx}">Isi / ubah</button>` : '<span class="sm">—</span>'}</td></tr>`).join('')).join('')}
+        ${progCell(it)}</tr>`).join('')).join('')}
       </tbody></table></div></div>`).join('')}
   <div class="note sec"><b>Cara hitung:</b> ${timker ? 'capaian triwulan = realisasi ÷ target triwulan; progres tahunan = realisasi triwulan terakhir yang sudah diisi ÷ target TW4. Nilai di atas 100% tetap ditampilkan, tetapi dihitung maksimal 100% saat dirata-rata.' : 'progres = jumlah realisasi TW1 s.d. TW berjalan ÷ rencana output (untuk output berbentuk persen: realisasi terakhir ÷ target). Nilai di atas 100% dihitung maksimal 100% saat dirata-rata.'}</div>
   ${PRC_SUMBER}
@@ -1661,7 +1660,7 @@ function vPrcPengukuran(){
   ${heading(prcCrumb(), 'Pengukuran Kinerja', yearSel() + '<button class="btn" data-act="dlAuto" data-a="antara">Unduh capaian antara</button><button class="btn" data-act="dlAuto" data-a="rekap">Unduh rekap unit</button>')}
   <div class="card" style="margin-bottom:18px"><h2>Bagaimana angka dihitung</h2>
     <div class="steps">
-      <div class="step"><div class="k"><i style="background:var(--acc)">1</i>Indikator</div><div style="font-size:15px;margin-top:4px">Capaian = realisasi ÷ target. Diisi masing-masing unit di menu <b>Capaian per unit</b>.</div></div>
+      <div class="step"><div class="k"><i style="background:var(--acc)">1</i>Indikator</div><div style="font-size:15px;margin-top:4px">Capaian = realisasi ÷ target. Data diambil dari Tim Pengukuran dan ditampilkan di menu <b>Capaian per unit</b>.</div></div>
       <div class="step"><div class="k"><i style="background:var(--acc)">2</i>Unit</div><div style="font-size:15px;margin-top:4px">Capaian unit = rata-rata capaian semua indikatornya (maks. 100% per indikator).</div></div>
       <div class="step"><div class="k"><i style="background:var(--acc)">3</i>Capaian antara IKK</div><div style="font-size:15px;margin-top:4px">Σ (rerata 4 tim kerja × bobot): ${PRC.bobot.pk}% PK Katimker, ${PRC.bobot.keg}% basis kegiatan, ${PRC.bobot.ang}% basis anggaran.</div></div>
       <div class="step"><div class="k"><i style="background:var(--acc)">4</i>Total lembaga</div><div style="font-size:15px;margin-top:4px">Rata-rata progres penyelesaian 14 unit. Semua grafik diperbarui begitu data diisi.</div></div>
@@ -1980,66 +1979,6 @@ function vPrcUnduh(){
   </div>`);
 }
 
-/* ---------- KELOLA DATA & TAHUN ---------- */
-function vPrcKelola(){
-  if(!prcIsAdmin()) return shell('prc','kelola',PRC_MENU(), `<div class="card" style="text-align:center;padding:48px"><h2>Khusus Admin Perencanaan</h2><p class="sm">Ganti pilihan “Lihat sebagai” menjadi Admin bagian untuk membuka menu ini.</p></div>`);
-  const ys = Object.keys(PRC.years).map(Number).sort(), next = Math.max(...ys) + 1, imp = PRC.pendingImport, B = PRC.basis[PRC.year];
-  const xl = !!window.XLSX;
-  return shell('prc','kelola',PRC_MENU(), `
-  ${heading(`<span class="admin-chip">${svgLock}Khusus admin</span> Perencanaan`, 'Kelola Data &amp; Tahun Anggaran', yearSel())}
-  <div class="row">
-    <div class="card" style="flex:1 1 420px;min-width:0"><h2>Tahun anggaran</h2>
-      <div class="tbox" style="border:none"><table class="t"><thead><tr><th>Tahun</th><th>Status</th><th>Triwulan berjalan</th><th class="r">Indikator</th><th></th></tr></thead><tbody>
-        ${ys.map(y => `<tr style="${y===PRC.year?'background:var(--accT)':''}"><td><b>${y}</b></td><td><span class="pill ${PRC.meta[y].status==='Berjalan'?'ok':'mu'}">${PRC.meta[y].status}</span></td>
-          <td><select data-act="setTW" data-y="${y}" style="min-height:40px;border:1.5px solid var(--field);border-radius:8px;padding:0 8px">${[1,2,3,4].map(t => `<option ${PRC.meta[y].tw===t?'selected':''} value="${t}">TW${t}</option>`).join('')}</select></td>
-          <td class="r num">${PRC.years[y].reduce((s,u)=>s+u.items.length,0)}</td><td>${y===PRC.year?'<span class="sm">sedang dibuka</span>':`<button class="btn sm" data-act="openYear" data-y="${y}">Buka</button>`}</td></tr>`).join('')}
-      </tbody></table></div>
-      <div class="note" style="margin-top:12px"><b>Tahun depan tidak perlu dibuat ulang di Excel.</b> Struktur sasaran, IKK, IKI, kegiatan, dan target disalin dari tahun ini; realisasi dikosongkan. Setelah itu tiap unit cukup mengisi realisasinya.</div>
-      <div class="acts" style="justify-content:flex-end;margin-top:12px"><button class="btn p" data-act="newYear" data-y="${next}">Siapkan tahun ${next}</button></div>
-    </div>
-    <div class="card" style="flex:1 1 460px;min-width:0;display:flex;flex-direction:column;gap:12px"><h2 style="margin:0">Impor dari Excel</h2>
-      <p style="margin:0;color:var(--ink2)">Kalau data sudah ada di Excel, cukup salin ke template (satu baris = satu indikator/kegiatan), lalu unggah. Dashboard langsung menghitung ulang semua capaian dan grafik.</p>
-      <div class="steps">
-        <div class="step"><div class="k"><i style="background:var(--acc)">1</i>Unduh template</div><div class="acts" style="margin-top:8px"><button class="btn sm" data-act="tpl" data-kosong="0">Data ${PRC.year}${xl?' (.xlsx)':' (.csv)'}</button><button class="btn sm" data-act="tpl" data-kosong="1">Template kosong</button></div></div>
-        <div class="step"><div class="k"><i style="background:var(--acc)">2</i>Isi di Excel</div><div class="sm" style="margin-top:6px">Persen boleh ditulis 75% atau 0,75. Jangan ubah judul kolom.</div></div>
-        <div class="step"><div class="k"><i style="background:var(--acc)">3</i>Unggah</div><label class="btn sm p" style="margin-top:8px;cursor:pointer">Pilih file<input type="file" class="hide" data-act="impFile" accept=".csv,.xlsx,.xls"></label></div>
-      </div>
-      <span class="sm">${xl ? 'Mendukung .xlsx dan .csv.' : 'Mode tanpa internet: gunakan .csv (di Excel: Simpan sebagai → CSV). Impor .xlsx aktif saat terhubung internet.'}</span>
-      ${imp ? (imp.error ? `<div class="alert bad">${svgWarn}<span>${esc(imp.error)}</span></div>` : `
-        <div class="card" style="background:#FBFCFD">
-          <b>Pratinjau impor · ${esc(imp.file)}</b>
-          <div class="sm" style="margin:4px 0 10px">${imp.count} baris terbaca untuk ${Object.keys(imp.units).length} unit</div>
-          <div class="seg" style="margin-bottom:10px">${Object.entries(imp.units).map(([k,v]) => `<span class="pill mu">${UNIT_META[k].s}: ${v.length}</span>`).join('')}</div>
-          ${imp.errors.length ? `<div class="alert warn" style="margin-bottom:10px">${svgWarn}<span><b>${imp.errors.length} catatan:</b><br>${imp.errors.slice(0,5).map(esc).join('<br>')}${imp.errors.length>5?'<br>…':''}</span></div>` : '<div class="alert info" style="margin-bottom:10px">'+svgInfo+'<span>Tidak ada kesalahan format.</span></div>'}
-          <div class="acts"><label class="f" style="flex-direction:row;align-items:center;gap:8px">Masukkan ke tahun<input id="impY" class="num" value="${imp.year}" style="width:90px;min-height:44px"></label>
-            <button class="btn" data-act="impCancel">Batal</button><button class="btn p" data-act="impApply">Terapkan data</button></div>
-        </div>`) : ''}
-    </div>
-  </div>
-  <div class="row sec">
-    <div class="card" style="flex:1 1 300px;min-width:0"><h2>Bobot capaian antara IKK 1.1 &amp; 1.2</h2>
-      ${[['pk','Capaian laporan kinerja PK Katimker'],['keg','Kinerja timker basis kegiatan'],['ang','Kinerja timker basis anggaran']].map(([k,l]) => `<label class="f" style="flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:8px"><span>${l}</span><span><input class="num" data-act="bobot" data-k="${k}" value="${PRC.bobot[k]}" style="width:70px;text-align:right"> %</span></label>`).join('')}
-      <div class="sm">Total: <b>${PRC.bobot.pk+PRC.bobot.keg+PRC.bobot.ang}%</b> ${PRC.bobot.pk+PRC.bobot.keg+PRC.bobot.ang!==100?'<span class="pill bad">harus 100%</span>':''}</div></div>
-    <div class="card" style="flex:2 1 520px;min-width:0"><h2>Input basis kegiatan &amp; basis anggaran ${PRC.year}</h2>
-      <div class="tbox" style="border:none"><table class="t" style="min-width:600px"><thead><tr><th>Tim kerja</th><th>Jenis</th>${[1,2,3,4].map(q => `<th class="r">TW${q}</th>`).join('')}</tr></thead><tbody>
-        ${TIMKER_KEYS.map(k => ['keg','ang'].map(kind => `<tr><td>${kind==='keg'?'<b>'+UNIT_META[k].s+'</b>':''}</td><td class="sm">${kind==='keg'?'Basis kegiatan':'Basis anggaran'}</td>${[0,1,2,3].map(i => `<td class="r"><input class="num" data-act="basis" data-kind="${kind}" data-k="${k}" data-i="${i}" value="${B[kind][k][i]==null?'':Math.round(B[kind][k][i]*1000)/10}" placeholder="—" style="width:70px;text-align:right;min-height:40px;border:1.5px solid var(--field);border-radius:6px"> %</td>`).join('')}</tr>`).join('')).join('')}
-      </tbody></table></div>
-      <p class="sm" style="margin:8px 0 0">Di aplikasi nyata dua baris ini terisi otomatis: basis kegiatan dari jadwal kegiatan yang terlaksana, basis anggaran dari realisasi anggaran tiap tim di dashboard Keuangan.</p></div>
-  </div>
-  <div class="row sec">
-    <div class="card" style="flex:1 1 420px;min-width:0"><h2>Catatan kualitas data Excel saat ini</h2>
-      <p class="sm" style="margin-top:-6px">Ditemukan saat membaca "Laporan_Capaian_Kinerja_2026-new.xlsx". Dengan template satu baris per indikator, masalah ini tidak terulang.</p>
-      ${['Sheet Timker SD masih berjudul "Laporan Capaian Kinerja 2025".','Timker SMA: target TW4 ditulis 100 (bukan 100%) pada 3 indikator; beberapa rumus rerata berisi #REF! dan #VALUE!; capaian diketik sebagai teks "0,00%".','Timker SMA: 8 indikator IKK 1.1 (Digitalisasi Pembelajaran, Penguatan Pendidikan Karakter, MBG) dicatat ulang di blok IKK 1.2, sehingga ikut terhitung dua kali.','Timker SMP: realisasi TW2 diisi "NA" dan TW3 kosong, sehingga capaian PK SMP terhitung 0%.','Timker PAUD: target TW1 salah satu indikator berisi rumus ke sel kosong (=-E939).','Urusan: kolom "Persentase Capaian" dihitung dengan cara berbeda-beda (sebagian manual, sebagian rumus, sebagian kosong).','Sel yang digabung (merge) membuat satu kegiatan tersebar di beberapa baris (mis. Perencanaan dan Keuangan).'].map(x => `<div style="display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line2);font-size:15px"><span style="color:#B45309;flex-shrink:0">${svgWarn}</span><span>${x}</span></div>`).join('')}</div>
-    <div class="card" style="flex:1 1 420px;min-width:0"><h2>Hak akses bagian Perencanaan</h2>
-      <div class="tbox" style="border:none"><table class="t"><thead><tr><th>Peran</th><th>Melihat</th><th>Mengubah</th></tr></thead><tbody>
-        <tr><td><b>Super Admin</b></td><td>Semua unit &amp; ringkasan</td><td><span class="pill mu">Tidak</span></td></tr>
-        <tr><td><b>Admin</b></td><td>Semua unit</td><td>Semua data, tahun, impor, bobot, dokumen, kalender</td></tr>
-        <tr><td><b>User</b><div class="sm">tim kerja / urusan</div></td><td>Ringkasan lembaga + rincian unit sendiri</td><td>Realisasi unit sendiri, agenda unit sendiri</td></tr>
-      </tbody></table></div>
-      <p class="sm" style="margin:8px 0 0">Coba pilih “Lihat sebagai → User” di kanan atas untuk melihat bedanya.</p></div>
-  </div>`);
-}
-
 /* ---------- modal isi data indikator ---------- */
 function itemModal(k, idx){
   const it = unitOf(k).items[idx], timker = !!it.t, adm = prcIsAdmin(), persen = it.tipe === 'persen';
@@ -2066,7 +2005,6 @@ function prcClick(el, a, e){
     case 'unitSel': PRC.unitSel = el.dataset.k; rerender(); return true;
     case 'ikkTab': PRC.ikkTab = el.dataset.ikk; rerender(); return true;
     case 'twTab': PRC.twTab = +el.dataset.tw; rerender(); return true;
-    case 'editItem': itemModal(el.dataset.k, +el.dataset.i); return true;
     case 'itemSave': {
       const it = unitOf(el.dataset.k).items[+el.dataset.i], persen = it.tipe === 'persen';
       const rd = id => { const x = $('#'+id); if(!x) return undefined; const v = parseNum(x.value); return v == null ? null : persen ? v/100 : v; };
@@ -2137,18 +2075,6 @@ function prcClick(el, a, e){
         <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="docSave">Unggah</button></div></form></div>`; $('#dJ').focus(); return true;
     case 'docSave': { const j = $('#dJ').value.trim(); if(!j){ toast('Judul wajib diisi'); return true; } const fn = $('#dF').textContent; const ext = /\./.test(fn) ? fn.split('.').pop().toUpperCase().slice(0,4) : 'PDF';
       DOCS.unshift({id:++DOC_ID, j, cat:$('#dC').value, th:$('#dT').value.trim() || String(PRC.year), f:ext, sz:'—', up:'29 Okt 2026', baru:true}); closeModal(); PRC.dl.cat = 'all'; rerender(); toast('Dokumen terunggah dan langsung tersedia untuk pegawai'); return true; }
-    case 'newYear': { const y = +el.dataset.y;
-      $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h3 id="mt">Siapkan tahun ${y}</h3>
-        <p style="margin:0">Struktur dari tahun ${PRC.year} akan disalin: ${Y().length} unit, ${Y().reduce((s,u)=>s+u.items.length,0)} indikator/kegiatan.</p>
-        <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked disabled style="width:18px;height:18px">Salin sasaran, IKK, IKI, dan kegiatan</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="nyT" checked style="width:18px;height:18px">Salin target dan rencana output (bisa direvisi nanti)</label>
-        <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked disabled style="width:18px;height:18px">Kosongkan semua realisasi</label>
-        <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="newYearGo" data-y="${y}">Buat tahun ${y}</button></div></div></div>`; return true; }
-    case 'newYearGo': { const y = +el.dataset.y; createYear(y, {target:$('#nyT').checked}); PRC.year = y; closeModal(); rerender(); toast(`Tahun ${y} siap. Unit tinggal mengisi realisasi.`); return true; }
-    case 'openYear': PRC.year = +el.dataset.y; rerender(); return true;
-    case 'tpl': downloadRows(el.dataset.kosong === '1' ? `Template_capaian_kinerja_kosong` : `Data_capaian_kinerja_${PRC.year}`, dataRows(PRC.year, el.dataset.kosong === '1'), !!window.XLSX); toast('Template diunduh'); return true;
-    case 'impCancel': PRC.pendingImport = null; rerender(); return true;
-    case 'impApply': { const y = parseInt($('#impY').value, 10) || PRC.year; applyImport(PRC.pendingImport, y); const n = PRC.pendingImport.count; PRC.pendingImport = null; rerender(); toast(`${n} baris diterapkan ke tahun ${y}. Semua grafik diperbarui.`); return true; }
   }
   return false;
 }
@@ -2159,23 +2085,12 @@ function prcChange(el, a){
     case 'nka': { const v = parseNum(el.value); PRC.nka[PRC.year][el.dataset.f] = v; rerender(); toast('NKA dihitung ulang'); return true; }
     case 'sakip': PRC.sakip[PRC.year][+el.dataset.i][1] = el.checked; rerender(); return true;
     case 'sakipNilai': PRC.sakipNilai[PRC.year] = parseNum(el.value); rerender(); return true;
-    case 'setTW': PRC.meta[+el.dataset.y].tw = +el.value; rerender(); toast('Triwulan berjalan diubah'); return true;
-    case 'bobot': PRC.bobot[el.dataset.k] = parseNum(el.value) || 0; rerender(); return true;
-    case 'basis': { const v = parseNum(el.value); PRC.basis[PRC.year][el.dataset.kind][el.dataset.k][+el.dataset.i] = v == null ? null : v/100; rerender(); toast('Basis diperbarui, capaian antara dihitung ulang'); return true; }
     case 'dlYear': PRC.dl.year = el.value; rerender(); return true;
     case 'kgFile': {
       const f = el.files[0]; if(!f) return true;
       const done = rows => { const r = rowsToKeg(rows); r.file = f.name; KG.pending = r; rerender(); };
       if(/\.xlsx?$/i.test(f.name)){
         if(!window.XLSX){ KG.pending = {error:'File .xlsx butuh koneksi internet untuk dibaca di mockup ini. Simpan sebagai CSV dari Excel lalu unggah ulang.', file:f.name}; rerender(); return true; }
-        f.arrayBuffer().then(buf => { const wb = XLSX.read(buf, {type:'array'}); const ws = wb.Sheets[wb.SheetNames[0]]; done(XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''})); });
-      } else f.text().then(t => done(parseCSV(t)));
-      return true; }
-    case 'impFile': {
-      const f = el.files[0]; if(!f) return true;
-      const done = rows => { const r = rowsToImport(rows); r.file = f.name; PRC.pendingImport = r; rerender(); };
-      if(/\.xlsx?$/i.test(f.name)){
-        if(!window.XLSX){ PRC.pendingImport = {error:'File .xlsx butuh koneksi internet untuk dibaca di mockup ini. Simpan sebagai CSV dari Excel lalu unggah ulang.', file:f.name}; rerender(); return true; }
         f.arrayBuffer().then(buf => { const wb = XLSX.read(buf, {type:'array'}); const ws = wb.Sheets[wb.SheetNames[0]]; done(XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''})); });
       } else f.text().then(t => done(parseCSV(t)));
       return true; }
@@ -2464,7 +2379,7 @@ function klnInput(el, a){
 /* ================= ROUTER ================= */
 const ROUTES = {
   '':vPortal, 'keu':vKeu, 'keu/realisasi':vKeuRealisasi, 'keu/jadwal':vKeuJadwal, 'keu/st':vKeuST, 'keu/unggah':vKeuUnggah, 'keu/format':vKeuFormat,
-  'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/kelola':vPrcKelola, 'prc/kegiatan':vPrcKegiatan, 'kln':vKln, 'kln/obat':vKlnObat
+  'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/kegiatan':vPrcKegiatan, 'kln':vKln, 'kln/obat':vKlnObat
 };
 function route(){
   const h = location.hash.replace(/^#\/?/,'');
@@ -2490,6 +2405,18 @@ document.addEventListener('change', e => {
   if(a==='lapKeu'){
     const k = KEG.find(x => x.id == e.target.dataset.id);
     if(state.role !== 'admin' || !k){ rerender(); return; } // hanya Admin Keuangan yang boleh mencentang
+    if(!e.target.checked && k.lapKeu){ // membatalkan centang: minta konfirmasi dulu
+      e.target.checked = true;
+      $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mt" aria-describedby="md" style="max-width:520px">
+        <h3 id="mt">Batalkan tanda “laporan diterima”?</h3>
+        <div id="md" style="display:flex;flex-direction:column;gap:10px">
+          <div>Laporan selesai tugas <b>${esc(k.nama)}</b> saat ini tercatat <b>diterima Keuangan${k.lapKeuTgl ? ' pada ' + tgl(k.lapKeuTgl) : ''}</b>.</div>
+          <div class="alert warn" style="margin:0">${svgWarn}<span>Jika tanda ini dibatalkan lalu dicentang kembali, tanggal penerimaan akan tercatat ulang sesuai tanggal pencentangan terakhir. Tanggal sebelumnya tidak dapat dipulihkan.</span></div>
+        </div>
+        <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Tidak, pertahankan</button><button class="btn p" data-act="lapUndo" data-id="${k.id}" style="background:var(--bad);border-color:var(--bad)">Ya, batalkan centang</button></div>
+      </div></div>`;
+      return;
+    }
     k.lapKeu = e.target.checked; k.lapKeuTgl = k.lapKeu ? iso(TODAY) : null;
     rerender(); toast(k.lapKeu ? 'Laporan ' + k.nama + ' ditandai sudah diterima Keuangan' : 'Tanda laporan diterima Keuangan dibatalkan');
   }
@@ -2539,6 +2466,10 @@ document.addEventListener('click', e => {
   if(a==='ingat'){ toast('Pengingat unggah dokumen dikirim ke ' + el.dataset.peg); }
   if(a==='toastOnly'){ toast(el.dataset.msg); }
   if(a==='addFormat'){ toast('Form input dibuka (simulasi mockup)'); }
+  if(a==='lapUndo'){
+    const k = KEG.find(x => x.id == el.dataset.id);
+    if(k && state.role === 'admin'){ k.lapKeu = false; k.lapKeuTgl = null; closeModal(); rerender(); toast('Tanda laporan diterima untuk ' + k.nama + ' telah dibatalkan'); }
+  }
   if(a==='alOpen'){ AL.pending = null; alModal(); }
   if(a==='alTpl'){ downloadRows('Template_alokasi_anggaran_' + 2026, alRows(), !!window.XLSX); toast('Template diunduh'); }
   if(a==='alCancel'){ AL.pending = null; closeModal(); }
