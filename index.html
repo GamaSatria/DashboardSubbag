@@ -194,6 +194,7 @@ th.lap{white-space:normal!important;width:116px;line-height:1.3}
 .dlnav button b{font-size:14px;color:var(--mute);font-weight:800}
 .dlnav button.on,.dlnav button.on:hover{background:var(--acc);color:#fff}
 .dlnav button.on b{color:#fff}
+.dlnav button.sub{padding-left:28px;font-weight:600}
 .ficon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
 .tbx{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--field);border-radius:10px;background:#fff;font-size:16px;text-align:center}
 .tbx span{font-size:14px;color:var(--mute)}
@@ -374,6 +375,7 @@ th.lap{white-space:normal!important;width:116px;line-height:1.3}
   .dlnav{flex:1 1 100%!important;flex-direction:row;gap:6px;max-width:none!important;margin:0 -16px;padding:0 16px 2px!important;overflow-x:auto;background:none;border:none;box-shadow:none;border-radius:0;scrollbar-width:none}
   .dlnav button{flex:none;min-height:40px;padding:0 12px;border:1.5px solid var(--line);background:#fff;font-size:14px;white-space:nowrap}
   .dlnav button.on{border-color:var(--acc)}
+  .dlnav button.sub{padding-left:12px;font-weight:700}
 
   /* struktur kinerja */
   .casc{align-items:stretch}
@@ -914,7 +916,7 @@ function vKeuRealisasi(){
   const cekArs = k => {
     if(!tugasSelesai(k)) return '<span class="sm">Kegiatan belum selesai</span>';
     const a = arsipOf(k);
-    return `<label class="cek ro" title="${a ? 'No. arsip ' + a.no + '. ' : ''}Otomatis dari data Kearsipan, tidak dapat diubah"><input type="checkbox" class="cb auto" ${a ? 'checked' : ''} disabled aria-label="Laporan ${esc(k.nama)} tercatat di Arsip"><span>${a ? 'Tercatat' : 'Menunggu'}</span></label><div class="sm">${a ? tgl(a.tgl) : 'belum ada di arsip'}</div>`;
+    return `<label class="cek ro" title="${a ? 'No. arsip ' + a.no + '. ' : ''}Otomatis dari data Kearsipan, tidak dapat diubah"><input type="checkbox" class="cb auto" ${a ? 'checked' : ''} disabled aria-label="Laporan ${esc(k.nama)} tercatat di Arsip"><span>${a ? 'Tercatat' : 'Menunggu'}</span></label>${a ? `<div class="sm">${tgl(a.tgl)}</div>` : ''}`;
   };
   const groups = Object.keys(TIM).map(t=>({t, items:list.filter(k=>k.tim===t)})).filter(g=>g.items.length);
   const T = totals(list);
@@ -1206,8 +1208,9 @@ const PRC = {
   sakipNilai: {2026: 95.05},
   ref: {2026: {prevY:2025, prev:{'1.1':'91,31%','1.2':'100%','2.1':'Sangat Baik','2.2':'AA'}, target:{'1.1':'91,32%','1.2':'100%','2.1':'Sangat Baik','2.2':'AA'}}},
   unitSel: 'PAUD', ikkTab: '1.1', twTab: 3, strukTab: 'cascading',
-  calY: 2026, calM: 9, layers: {agenda:true, keg:true},
+  calY: 2026, calM: 9, layers: {agenda:true, keg:true}, calF: {unit:'all', kat:'all', q:''},
   dl: {cat:'all', q:'', year:'all'},
+  inf: {cat:'all', q:''},
   pendingImport: null
 };
 const Y = () => PRC.years[PRC.year];
@@ -1525,7 +1528,7 @@ function unitBars(keys, own){
 /* ---------- menu & shell ---------- */
 const PRC_MENU = () => [
   {p:'', l:'Beranda'}, {p:'capaian', l: isUnit() ? 'Data unit saya' : 'Capaian per unit'}, {p:'pengukuran', l:'Pengukuran IKK'}, {p:'kalender', l:'Kalender'},
-  {p:'kegiatan', l:'Program kegiatan', hidden: state.role !== 'admin'}, {p:'struktur', l:'Struktur kinerja'}, {p:'unduh', l:'Pusat unduhan'}
+  {p:'kegiatan', l:'Program kegiatan', hidden: state.role !== 'admin'}, {p:'struktur', l:'Struktur kinerja'}, {p:'unduh', l:'Pusat unduhan'}, {p:'info', l:'Pusat Informasi'}
 ];
 const yearSel = () => `<label class="yearbox">Tahun<select data-act="prcYear">${Object.keys(PRC.years).map(y => `<option value="${y}" ${+y===PRC.year?'selected':''}>${y}</option>`).join('')}</select></label>`;
 const prcCrumb = s => `Perencanaan · Tahun ${PRC.year} · data s.d. Triwulan ${TWc()}${s ? ' · ' + s : ''}`;
@@ -1846,14 +1849,38 @@ function vPrcKegiatan(){
 }
 
 /* ---------- KALENDER ---------- */
+/* ---------- filter kalender: unit (tim kerja / urusan), jenis, kata kunci ---------- */
+const calFilterOn = () => PRC.calF.unit !== 'all' || PRC.calF.kat !== 'all' || !!PRC.calF.q;
+function calFilt(list){
+  const {unit, kat, q} = PRC.calF, s = q.trim().toLowerCase();
+  return list.filter(o => {
+    if(o.type === 'agenda'){
+      if(unit !== 'all' && o.ev.unit !== unit) return false;
+      if(kat !== 'all' && o.ev.kat !== kat) return false;
+      return !s || (o.ev.judul + ' ' + (o.ev.lokasi || '') + ' ' + (o.ev.ket || '')).toLowerCase().includes(s);
+    }
+    if(unit !== 'all' && o.k.tim !== unit) return false; // kegiatan program hanya milik tim kerja
+    if(kat !== 'all' && kat !== 'keg') return false;
+    return !s || (o.k.nama + ' ' + (o.k.tempat || '')).toLowerCase().includes(s);
+  });
+}
+const calFilterBar = () => { const {unit, kat, q} = PRC.calF, opt = k => `<option value="${k}" ${unit===k?'selected':''}>${esc(UNIT_META[k].nama)}</option>`;
+  return `<div class="tools" style="align-items:flex-end">
+    <label class="f">Tim kerja / urusan<select data-act="calUnit"><option value="all">Semua unit</option>
+      <optgroup label="Tim kerja">${TIMKER_KEYS.map(opt).join('')}</optgroup>
+      <optgroup label="Urusan Subbag Umum">${URUSAN_KEYS.map(opt).join('')}</optgroup></select></label>
+    <label class="f">Jenis<select data-act="calKat"><option value="all">Semua jenis</option>${Object.entries(KAT).map(([k,v]) => `<option value="${k}" ${kat===k?'selected':''}>${v.l}</option>`).join('')}<option value="keg" ${kat==='keg'?'selected':''}>Kegiatan tim kerja (dari program)</option></select></label>
+    <label class="f" style="flex:1 1 220px">Cari agenda<input type="search" data-act="calQ" value="${esc(q)}" placeholder="Judul, tempat, atau catatan"></label>
+    ${calFilterOn() ? '<button class="btn" data-act="calReset">Reset filter</button>' : ''}
+  </div>`; };
 function vPrcKalender(){
   const y = PRC.calY, mo = PRC.calM, first = new Date(y, mo, 1), start = new Date(first); start.setDate(1 - (first.getDay()+6)%7);
   const end = new Date(start); end.setDate(start.getDate()+41);
   const add = canAddAgenda();
-  const items = occurrences(start, end).map(o => o.type === 'agenda'
+  const items = calFilt(occurrences(start, end)).map(o => o.type === 'agenda'
     ? {m:o.m, s:o.s, label:(o.ev.jam ? o.ev.jam.slice(0,5) + ' ' : '') + o.ev.judul, title:o.ev.judul, act:'evOpen', id:o.ev.id, style:'background:' + KAT[o.ev.kat].t + ';color:' + KAT[o.ev.kat].c}
     : {m:o.m, s:o.s, label:o.k.nama, title:o.k.nama + ' · ' + o.k.tempat, act:'kegOpen', id:o.k.id, style:'background:#fff;color:' + TIM[o.k.tim].c + ';box-shadow:inset 0 0 0 1px ' + TIM[o.k.tim].c});
-  const monthOcc = occurrences(first, new Date(y, mo+1, 0));
+  const monthOcc = calFilt(occurrences(first, new Date(y, mo+1, 0)));
   return shell('prc','kalender',PRC_MENU(), `
   ${heading('Perencanaan · agenda & jadwal kegiatan', 'Kalender Perencanaan', add ? '<button class="btn p" data-act="calAdd" data-date="">+ Tambah agenda</button>' : '')}
   <div class="tools" style="justify-content:space-between;align-items:center">
@@ -1868,6 +1895,7 @@ function vPrcKalender(){
       <label style="display:flex;align-items:center;gap:6px;font-weight:600"><input type="checkbox" data-act="layer" data-l="keg" ${PRC.layers.keg?'checked':''} style="width:18px;height:18px">Jadwal kegiatan tim kerja</label>
     </div>
   </div>
+  ${calFilterBar()}
   <div class="legend" style="margin-bottom:10px">${Object.values(KAT).map(c => `<span><i style="background:${c.c}"></i>${c.l}</span>`).join('')}<span><i style="background:#fff;border:1px solid #64748B"></i>Kegiatan tim kerja (dari program)</span></div>
   <div style="overflow-x:auto">${calGrid(start, mo, items, add)}</div>
   ${add ? '<p class="sm" style="margin-top:8px">Klik angka tanggal untuk menambah agenda pada tanggal itu, seperti di Google Calendar. Agenda bisa diulang setiap bulan.</p>' : ''}
@@ -1877,7 +1905,7 @@ function vPrcKalender(){
         <td><span class="tag" style="background:${KAT[o.ev.kat].t};color:${KAT[o.ev.kat].c}">${KAT[o.ev.kat].l}</span></td><td>${UNIT_META[o.ev.unit]?.s || '—'}</td><td>${esc(o.ev.lokasi||'—')}</td>
         <td>${canEditAgenda(o.ev) ? `<button class="btn sm edit" data-act="evEdit" data-id="${o.ev.id}">Ubah</button>` : `<button class="btn sm" data-act="evOpen" data-id="${o.ev.id}">Detail</button>`}</td></tr>`
       : `<tr><td class="num" style="white-space:nowrap">${rentang(o.k.m, o.k.s)}</td><td><b>${esc(o.k.nama)}</b></td><td><span class="tag" style="background:${TIM[o.k.tim].t};color:${TIM[o.k.tim].c}">Kegiatan ${TIM[o.k.tim].nama}</span></td><td>${TIM[o.k.tim].nama}</td><td>${esc(o.k.tempat)}</td><td><button class="btn sm" data-act="kegOpen" data-id="${o.k.id}">Detail</button></td></tr>`).join('')
-      : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mute)">Belum ada agenda di bulan ini.</td></tr>'}
+      : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mute)">${calFilterOn() ? 'Tidak ada agenda yang cocok dengan filter di bulan ini.' : 'Belum ada agenda di bulan ini.'}</td></tr>`}
     </tbody></table></div>
     <p class="sm" style="margin-top:8px">Jadwal kegiatan tim kerja adalah data yang sama dengan kalender di dashboard Keuangan, jadi perubahan jadwal oleh tim kerja langsung terlihat di kedua tempat.</p></div>`);
 }
@@ -1979,6 +2007,45 @@ function vPrcUnduh(){
   </div>`);
 }
 
+/* ---------- PUSAT INFORMASI ---------- */
+const INFCAT = {
+  g_renc:'Perencanaan Kinerja', renc_cascading:'Cascading', renc_pohon:'Pohon Kinerja', renc_pk:'Perjanjian Kinerja', renc_skp:'SKP Pegawai', renc_dok:'Dokumen Perencanaan',
+  g_ukur:'Pengukuran Kinerja',
+  g_lapor:'Pelaporan Kinerja', lap_bulanan:'Laporan Kinerja Bulanan', lap_tw:'Laporan Kinerja Triwulan', lap_f25:'Laporan Triwulan Form-25',
+  g_sakip:'SAKIP Kolaboratif', g_lain:'Data Lainnya'};
+/* subkategori: kunci anak -> kunci induk. Memilih induk menampilkan juga isi anak-anaknya. */
+const INFGRP = {renc_cascading:'g_renc', renc_pohon:'g_renc', renc_pk:'g_renc', renc_skp:'g_renc', renc_dok:'g_renc', lap_bulanan:'g_lapor', lap_tw:'g_lapor', lap_f25:'g_lapor'};
+const infIn = (k, c) => k === c || INFGRP[k] === c;
+const infKids = c => Object.keys(INFCAT).filter(k => INFGRP[k] === c);
+const infOrder = () => Object.keys(INFCAT).filter(k => !INFGRP[k]).flatMap(k => [k, ...infKids(k)]);
+const infLabel = k => INFGRP[k] && INFCAT[INFGRP[k]] ? INFCAT[INFGRP[k]] + ' › ' + INFCAT[k] : INFCAT[k];
+let INF_ID = 10;
+let INFO = []; /* diisi kemudian */
+function vPrcInfo(){
+  const {cat, q} = PRC.inf, adm = prcIsAdmin();
+  const list = INFO.filter(d => (cat === 'all' || infIn(d.cat, cat)) && (!q || (d.j + ' ' + d.isi).toLowerCase().includes(q.toLowerCase())));
+  const cnt = c => INFO.filter(d => infIn(d.cat, c)).length;
+  return shell('prc','info',PRC_MENU(), `
+  ${heading('Perencanaan · informasi untuk internal', 'Pusat Informasi', adm ? '<button class="btn p" data-act="infAdd">Tambah informasi</button>' : '')}
+  <p style="margin:-8px 0 16px;color:var(--ink2);max-width:780px">Pengumuman, tenggat, panduan, dan jawaban atas pertanyaan yang sering diajukan seputar perencanaan dan pelaporan kinerja.</p>
+  <div class="row" style="align-items:flex-start">
+    <nav class="card dlnav" style="flex:1 1 220px;max-width:280px;padding:12px" aria-label="Kategori informasi">
+      <button data-act="infCat" data-c="all" class="${cat==='all'?'on':''}"><span>Semua informasi</span><b>${INFO.length}</b></button>
+      ${infOrder().map(k => `<button data-act="infCat" data-c="${k}" class="${cat===k?'on':''}${INFGRP[k]?' sub':''}"><span>${esc(INFCAT[k])}</span><b>${cnt(k)}</b></button>`).join('')}
+    </nav>
+    <div style="flex:4 1 560px;min-width:0">
+      <div class="tools"><label class="f" style="flex:1 1 280px">Cari informasi<input type="search" data-act="infQ" value="${esc(q)}" placeholder="mis. SKP, triwulan, anggaran"></label>${adm && INFCAT[cat] ? `<button class="btn" data-act="infCatDel" data-c="${cat}" style="align-self:flex-end;color:var(--bad)">Hapus kategori “${esc(INFCAT[cat])}”</button>` : ''}</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${list.length ? list.map(d => `<details class="card" style="padding:14px 18px" ${d.penting ? 'open' : ''}>
+          <summary style="cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:16px;flex:1 1 240px">${esc(d.j)}</b>${d.penting ? '<span class="pill warn">Penting</span>' : ''}<span class="pill info">${esc(infLabel(d.cat))}</span></summary>
+          <p style="margin:10px 0 6px;color:var(--ink2)">${esc(d.isi)}</p>
+          <div style="display:flex;gap:10px;align-items:center;justify-content:space-between"><span class="sm">Diterbitkan ${d.tgl}</span>${adm ? `<button class="btn sm" data-act="infDel" data-id="${d.id}" style="color:var(--bad)">Hapus</button>` : ''}</div>
+        </details>`).join('') : `<div class="note">${INFO.length ? 'Tidak ada informasi yang cocok.' : 'Belum ada informasi.'}</div>`}
+      </div>
+    </div>
+  </div>`);
+}
+
 /* ---------- modal isi data indikator ---------- */
 function itemModal(k, idx){
   const it = unitOf(k).items[idx], timker = !!it.t, adm = prcIsAdmin(), persen = it.tipe === 'persen';
@@ -2060,6 +2127,37 @@ function prcClick(el, a, e){
       KG.pending = null; rerender(); toast(`${baru} kegiatan baru, ${ubah} diperbarui. Tersinkron ke Keuangan.`); return true; }
     case 'strukTab': PRC.strukTab = el.dataset.t; rerender(); return true;
     case 'dlCat': PRC.dl.cat = el.dataset.c; rerender(); return true;
+    case 'infCat': PRC.inf.cat = el.dataset.c; rerender(); return true;
+    case 'calReset': PRC.calF = {unit:'all', kat:'all', q:''}; rerender(); return true;
+    case 'infCatDel': { const c = el.dataset.c, ks = [c, ...infKids(c)], n = INFO.filter(x => ks.includes(x.cat)).length;
+      $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mt" aria-describedby="md" style="max-width:520px">
+        <h3 id="mt">Hapus kategori “${esc(INFCAT[c])}”?</h3>
+        <div id="md" style="display:flex;flex-direction:column;gap:10px">
+          <div>${ks.length > 1 ? `Kategori ini memiliki <b>${ks.length - 1} subkategori</b> yang ikut terhapus. ` : ''}${n ? `Kategori ini berisi <b>${n} informasi</b>. Seluruh informasi di dalamnya ikut terhapus.` : 'Kategori ini belum berisi informasi.'}</div>
+          <div class="alert warn" style="margin:0">${svgWarn}<span>Tindakan ini tidak dapat dibatalkan.</span></div>
+        </div>
+        <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="infCatDo" data-c="${c}" style="background:var(--bad);border-color:var(--bad)">Ya, hapus kategori</button></div>
+      </div></div>`; return true; }
+    case 'infCatDo': { const c = el.dataset.c, ks = [c, ...infKids(c)], n = INFO.filter(x => ks.includes(x.cat)).length;
+      ks.forEach(k => delete INFCAT[k]); INFO = INFO.filter(x => !ks.includes(x.cat)); PRC.inf.cat = 'all'; closeModal(); rerender(); toast('Kategori dihapus' + (n ? ` beserta ${n} informasi` : '')); return true; }
+    case 'infDel': INFO = INFO.filter(x => x.id != el.dataset.id); rerender(); toast('Informasi dihapus'); return true;
+    case 'infAdd':
+      $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><form class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" onsubmit="return false"><h3 id="mt">Tambah informasi</h3>
+        <label class="f">Judul<input id="iJ" placeholder="mis. Jadwal evaluasi SAKIP 2026"></label>
+        <label class="f">Kategori<select id="iC" data-act="infCatSel">${infOrder().map(k => `<option value="${k}">${INFGRP[k] ? '&nbsp;&nbsp;› ' : ''}${esc(INFCAT[k])}</option>`).join('')}<option value="__baru">+ Buat kategori baru…</option></select></label>
+        <label class="f hide" id="iNW">Nama kategori baru<input id="iN" maxlength="40" placeholder="mis. Regulasi"></label>
+        <label class="f">Isi informasi<textarea id="iI" rows="4" placeholder="Tulis informasi singkat dan jelas"></textarea></label>
+        <label style="display:flex;gap:8px;align-items:center;font-size:15px"><input type="checkbox" id="iP"> Tandai sebagai penting</label>
+        <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="infSave">Terbitkan</button></div></form></div>`;
+      if(!Object.keys(INFCAT).length) $('#iNW').classList.remove('hide'); $('#iJ').focus(); return true;
+    case 'infSave': { const j = $('#iJ').value.trim(), isi = $('#iI').value.trim();
+      if(!j || !isi){ toast('Judul dan isi informasi wajib diisi'); return true; }
+      let cat = $('#iC').value;
+      if(cat === '__baru'){ const nm = $('#iN').value.trim().replace(/\s+/g,' ');
+        if(!nm){ toast('Isi nama kategori baru'); return true; }
+        cat = Object.keys(INFCAT).find(k => INFCAT[k].toLowerCase() === nm.toLowerCase()) || 'k' + (++INF_ID);
+        INFCAT[cat] = INFCAT[cat] || nm; }
+      INFO.unshift({id:++INF_ID, cat, j, isi, penting:$('#iP').checked, tgl:'28 Okt 2026'}); closeModal(); PRC.inf.cat = cat; rerender(); toast('Informasi diterbitkan dan langsung terlihat oleh pegawai'); return true; }
     case 'dlDoc': { const d = DOCS.find(x => x.id == el.dataset.id);
       if(d.auto === 'rekap') downloadRows(`Rekap_capaian_unit_${PRC.year}`, rekapRows(), !!window.XLSX);
       else if(d.auto === 'antara') downloadRows(`Capaian_antara_IKK_${PRC.year}`, antaraRows(), !!window.XLSX);
@@ -2082,10 +2180,13 @@ function prcChange(el, a){
   switch(a){
     case 'prcYear': PRC.year = +el.value; PRC.twTab = Math.min(PRC.twTab, 4); rerender(); return true;
     case 'layer': PRC.layers[el.dataset.l] = el.checked; rerender(); return true;
+    case 'calUnit': PRC.calF.unit = el.value; rerender(); return true;
+    case 'calKat': PRC.calF.kat = el.value; rerender(); return true;
     case 'nka': { const v = parseNum(el.value); PRC.nka[PRC.year][el.dataset.f] = v; rerender(); toast('NKA dihitung ulang'); return true; }
     case 'sakip': PRC.sakip[PRC.year][+el.dataset.i][1] = el.checked; rerender(); return true;
     case 'sakipNilai': PRC.sakipNilai[PRC.year] = parseNum(el.value); rerender(); return true;
     case 'dlYear': PRC.dl.year = el.value; rerender(); return true;
+    case 'infCatSel': { const w = $('#iNW'); w.classList.toggle('hide', el.value !== '__baru'); if(el.value === '__baru') $('#iN').focus(); return true; }
     case 'kgFile': {
       const f = el.files[0]; if(!f) return true;
       const done = rows => { const r = rowsToKeg(rows); r.file = f.name; KG.pending = r; rerender(); };
@@ -2203,11 +2304,12 @@ function vKlnObat(){
     return `<tr><td><b>${esc(o[0])}</b></td><td class="r num">${o[1]} ${esc(o[2])}</td><td class="r num">${o[3]}</td><td><div class="bar"><i style="width:${w}%;background:${s[1]==='ok'?'var(--acc)':s[1]==='bad'?'#A61B1B':'#E08A1E'}"></i></div></td><td>${esc(o[4])}</td><td><span class="pill ${s[1]}">${s[0]}</span></td>${adm?`<td><div class="kstep"><button type="button" class="kbtn" data-act="oDec" data-i="${i}" aria-label="Kurangi 1 ${esc(o[0])}" ${o[1]===0?'disabled':''}>−</button><button type="button" class="kbtn" data-act="oInc" data-i="${i}" aria-label="Tambah 1 ${esc(o[0])}">+</button><button type="button" class="btn sm edit" data-act="oAtur" data-i="${i}">Atur</button></div></td>`:''}</tr>`; }).join('')
   : `<tr><td colspan="${adm?7:6}" style="text-align:center;padding:28px;color:var(--mute)">Tidak ada obat yang cocok dengan filter.</td></tr>`}
   </tbody></table></div>
-  <p class="sm" style="margin-top:10px">${adm?'Tombol − dan + mengubah stok satu per satu. Gunakan <b>Atur</b> untuk jumlah besar, stock opname, stok minimum, dan tanggal kedaluwarsa. ':''}Obat yang menipis otomatis masuk daftar usulan pengadaan ke BMN.</p>
+  <p class="sm" style="margin-top:10px">${adm?'Tombol − dan + mengubah stok satu per satu. Gunakan <b>Atur</b> untuk jumlah besar, stock opname, stok minimum, dan tanggal kedaluwarsa. ':''}Status stok dihitung otomatis dari jumlah stok dan batas minimum.</p>
   <div class="sec"><h2>Riwayat mutasi stok</h2>
   <div class="tbox"><table class="t" style="min-width:760px"><thead><tr><th>Waktu</th><th>Obat</th><th>Jenis</th><th class="r">Jumlah</th><th class="r">Stok akhir</th><th>Keterangan</th></tr></thead><tbody>
     ${log.map(l => `<tr><td class="num" style="white-space:nowrap">${esc(l.t)}</td><td><b>${esc(l.o)}</b></td><td><span class="pill ${jenisPill[l.j]}">${l.j}</span></td><td class="r num"><b style="color:${l.n>0?'var(--ok)':'var(--bad)'}">${l.n>0?'+':'−'}${Math.abs(l.n)}</b> ${esc(l.u)}</td><td class="r num">${l.s} ${esc(l.u)}</td><td>${esc(l.k)}</td></tr>`).join('')}
-  </tbody></table></div></div>`);
+  </tbody></table></div></div>
+  <div class="note sec"><b>Terhubung dengan BMN:</b> data stok obat pada halaman ini akan disambungkan dengan sistem pengelolaan Barang Milik Negara (BMN). Setelah terhubung, perubahan stok serta usulan pengadaan untuk obat yang menipis atau habis akan diteruskan ke BMN secara otomatis, sehingga petugas tidak perlu mencatat dua kali.</div>`);
 }
 
 /* ---------- popup klinik ---------- */
@@ -2379,7 +2481,7 @@ function klnInput(el, a){
 /* ================= ROUTER ================= */
 const ROUTES = {
   '':vPortal, 'keu':vKeu, 'keu/realisasi':vKeuRealisasi, 'keu/jadwal':vKeuJadwal, 'keu/st':vKeuST, 'keu/unggah':vKeuUnggah, 'keu/format':vKeuFormat,
-  'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/kegiatan':vPrcKegiatan, 'kln':vKln, 'kln/obat':vKlnObat
+  'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/info':vPrcInfo, 'prc/kegiatan':vPrcKegiatan, 'kln':vKln, 'kln/obat':vKlnObat
 };
 function route(){
   const h = location.hash.replace(/^#\/?/,'');
@@ -2441,6 +2543,8 @@ document.addEventListener('input', e => {
   const a = e.target.dataset.act;
   klnInput(e.target, a);
   if(a==='dlQ'){ PRC.dl.q = e.target.value; rerender('[data-act="dlQ"]'); }
+  if(a==='calQ'){ PRC.calF.q = e.target.value; rerender('[data-act="calQ"]'); }
+  if(a==='infQ'){ PRC.inf.q = e.target.value; rerender('[data-act="infQ"]'); }
   if(a==='fQ'){ state.f.q = e.target.value; rerender('[data-act="fQ"]'); }
   if(a==='nom'){
     e.target.value = e.target.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
