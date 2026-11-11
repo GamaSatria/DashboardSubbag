@@ -698,7 +698,7 @@ function roleBand(b, active){
   let who, ket, color, cta = '';
   if(r === 'admin'){
     who = 'Admin · ' + B.nama; color = B.accD;
-    ket = {keu:'Dapat memperbarui realisasi dan status anggaran. Data awal anggaran berasal dari bagian Perencanaan.', prc:'Dapat mengubah semua data, tahun anggaran, dan dokumen.', kln:'Dapat mencatat kunjungan dan melihat rincian pasien.'}[b];
+    ket = {keu:'Mengisi seluruh anggaran (alokasi, realisasi, status). Daftar kegiatan dan jadwalnya berasal dari bagian Perencanaan.', prc:'Dapat mengubah semua data, tahun anggaran, dan dokumen.', kln:'Dapat mencatat kunjungan dan melihat rincian pasien.'}[b];
   } else if(r === 'pimpinan'){
     who = 'Super Admin'; color = '#1F2A37';
     ket = 'Melihat seluruh data. Data tidak dapat diubah dari akun ini.';
@@ -881,7 +881,7 @@ function vKeu(){
     <div class="card" style="flex:3 1 480px;min-width:0">
       <h2>Kegiatan yang akan berjalan (30 hari ke depan)</h2>
       <div class="tbox" style="border:none"><table class="t"><thead><tr><th>Tanggal</th><th>Kegiatan</th><th>Tempat</th><th class="r">Alokasi</th></tr></thead><tbody>
-      ${soon.map(k=>`<tr><td class="num" style="white-space:nowrap">${rentang(k.m,k.s)}${k.resch?'<div><span class="pill warn" style="margin-top:4px">Dijadwal ulang</span></div>':''}</td><td><b>${esc(k.nama)}</b><div class="sm">${TIM[k.tim].nama}</div></td><td>${esc(k.tempat)}</td><td class="r num">${jt(k.a)}</td></tr>`).join('')}
+      ${soon.map(k=>`<tr><td class="num" style="white-space:nowrap">${rentang(k.m,k.s)}${k.resch?'<div><span class="pill warn" style="margin-top:4px">Dijadwal ulang</span></div>':''}</td><td><b>${esc(k.nama)}</b><div class="sm">${TIM[k.tim].nama}</div></td><td>${esc(k.tempat)}</td><td class="r num">${k.a > 0 ? jt(k.a) : '—'}</td></tr>`).join('')}
       </tbody></table></div>
       <a class="btn sm" style="margin-top:12px;align-self:flex-start" href="#/keu/jadwal">Buka kalender kegiatan</a>
     </div>
@@ -952,7 +952,7 @@ function vKeuRealisasi(){
       <tr class="sub"><td><span class="tag" style="background:${TIM[g.t].t};color:${TIM[g.t].c}">${TIM[g.t].nama}</span> <span class="sm">${g.items.length} kegiatan</span></td><td class="r num">${jt(gt.a)}</td><td class="r num">${jt(gt.r)}</td><td class="r num">${jt(gt.sisa)}</td><td><div class="barcell"><div class="bar" style="flex:1"><i style="width:${gt.p}%;background:${TIM[g.t].c}"></i></div><b>${pf(gt.p)}</b></div></td><td></td><td class="num sm">${g.items.filter(k=>tugasSelesai(k)&&k.lapKeu).length} / ${g.items.filter(tugasSelesai).length}</td><td class="num sm">${g.items.filter(k=>tugasSelesai(k)&&arsipOf(k)).length} / ${g.items.filter(tugasSelesai).length}</td><td></td></tr>
       ${g.items.map(k => { const p = pct(k.r,k.a), s = statusOf(k); return `<tr>
         <td><b>${esc(k.nama)}</b><div class="sm">${rentang(k.m,k.s)} · ${esc(k.tempat)}</div></td>
-        <td class="r num">${jt(k.a)}</td><td class="r num">${jt(k.r)}</td><td class="r num">${jt(k.a-k.r)}</td>
+        <td class="r num">${k.a > 0 ? jt(k.a) : '<span class="pill warn">Belum diisi</span>'}</td><td class="r num">${jt(k.r)}</td><td class="r num">${k.a > 0 ? jt(k.a-k.r) : '—'}</td>
         <td><div class="barcell"><div class="bar" style="flex:1"><i style="width:${p}%"></i></div><b>${pf(p)}</b></div></td>
         <td><span class="pill ${STATUS[s].c}">${STATUS[s].l}</span></td>
         <td>${cekKeu(k)}</td><td>${cekArs(k)}</td>
@@ -1468,7 +1468,7 @@ function unitBars(keys, own){
 /* ---------- menu & shell ---------- */
 const PRC_MENU = () => [
   {p:'', l:'Beranda'}, {p:'capaian', l: isUnit() ? 'Data unit saya' : 'Capaian per unit'}, {p:'pengukuran', l:'Pengukuran IKK'}, {p:'kalender', l:'Kalender'},
-  {p:'struktur', l:'Struktur kinerja'}, {p:'unduh', l:'Pusat unduhan'}, {p:'kelola', l:'Kelola data', lock:true, hidden: state.role !== 'admin'}
+  {p:'kegiatan', l:'Program kegiatan', hidden: state.role !== 'admin'}, {p:'struktur', l:'Struktur kinerja'}, {p:'unduh', l:'Pusat unduhan'}, {p:'kelola', l:'Kelola data', lock:true, hidden: state.role !== 'admin'}
 ];
 const yearSel = () => `<label class="yearbox">Tahun<select data-act="prcYear">${Object.keys(PRC.years).map(y => `<option value="${y}" ${+y===PRC.year?'selected':''}>${y}</option>`).join('')}</select></label>`;
 const prcCrumb = s => `Perencanaan · Tahun ${PRC.year} · data s.d. Triwulan ${TWc()}${s ? ' · ' + s : ''}`;
@@ -1666,6 +1666,116 @@ function vPrcPengukuran(){
   </div>` : ''}
   ${PRC_SUMBER}
   `);
+}
+
+/* ---------- KEGIATAN & ANGGARAN AWAL ----------
+   Diinput oleh Admin Perencanaan. Memakai array KEG yang sama dengan dashboard Keuangan,
+   jadi setiap perubahan langsung tersinkron ke Realisasi, Jadwal, dan Ringkasan Keuangan. */
+const KG = {pending:null};
+const KG_HEADER = ['Tim Kerja','Nama Kegiatan','Tanggal Mulai','Tanggal Selesai','Tempat','Mode'];
+function kgRows(kosong){
+  const rows = [KG_HEADER];
+  if(kosong) rows.push(['PAUD','CONTOH - hapus baris ini','2026-03-03','2026-03-05','Hotel, Jakarta Pusat','Luring']);
+  else KEG.forEach(k => rows.push([k.tim, k.nama, k.m, k.s, k.tempat, k.mode]));
+  return rows;
+}
+function kgDate(v){
+  const pad = n => String(n).padStart(2,'0'); let m;
+  if(v instanceof Date && !isNaN(v)) return iso(v);
+  if(typeof v === 'number' && v > 20000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' + pad(d.getUTCDate()); }
+  const s = String(v == null ? '' : v).trim();
+  if((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) return m[1] + '-' + pad(m[2]) + '-' + pad(m[3]);
+  if((m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/))) return m[3] + '-' + pad(m[2]) + '-' + pad(m[1]);
+  return null;
+}
+function rowsToKeg(rows){
+  const h = rows.findIndex(r => r.some(c => String(c || '').trim().toLowerCase() === 'nama kegiatan'));
+  if(h < 0) return {error:'Kolom "Nama Kegiatan" tidak ditemukan. Gunakan template dari halaman ini.'};
+  const H = rows[h].map(c => String(c || '').trim().toLowerCase()), col = n => H.findIndex(x => x.startsWith(n.toLowerCase()));
+  const items = [], errors = [];
+  rows.slice(h+1).forEach((r, i) => {
+    const no = h + i + 2, nama = String(r[col('Nama Kegiatan')] || '').trim(), timRaw = String(r[col('Tim Kerja')] || '').trim().toUpperCase();
+    if((!nama && !timRaw) || /^contoh/i.test(nama)) return;
+    const tim = Object.keys(TIM).find(k => k === timRaw || TIM[k].nama.toUpperCase() === timRaw);
+    if(!tim){ errors.push(`Baris ${no}: tim kerja "${timRaw || '(kosong)'}" tidak dikenal (pakai PAUD, SD, SMP, SMA, atau UMUM)`); return; }
+    if(!nama){ errors.push(`Baris ${no}: nama kegiatan kosong`); return; }
+    const m = kgDate(r[col('Tanggal Mulai')]), s = kgDate(r[col('Tanggal Selesai')]) || m;
+    if(!m){ errors.push(`Baris ${no}: tanggal mulai tidak terbaca (pakai 2026-03-03 atau 03/03/2026)`); return; }
+    if(s < m){ errors.push(`Baris ${no}: tanggal selesai lebih awal dari tanggal mulai`); return; }
+    const tempat = String(r[col('Tempat')] || '').trim() || '—';
+    const mdRaw = String(r[col('Mode')] || '').trim().toLowerCase();
+    const mode = mdRaw ? (mdRaw.startsWith('d') ? 'Daring' : 'Luring') : (/daring|zoom|online/i.test(tempat) ? 'Daring' : 'Luring');
+    const ada = KEG.find(k => k.tim === tim && k.nama.trim().toLowerCase() === nama.toLowerCase());
+    items.push({tim, nama, m, s, tempat, mode, baru:!ada});
+  });
+  return {items, errors, count:items.length};
+}
+function kgSetujui(data, id){
+  if(id){
+    const k = KEG.find(x => x.id == id);
+    if(!k.resch && k.r === 0 && (k.m !== data.m || k.s !== data.s)) k.resch = rentang(k.m, k.s);
+    Object.assign(k, data); return k;
+  }
+  const k = {id:Math.max(...KEG.map(x => x.id)) + 1, ...data, a:0, r:0, st: D(data.s) < TODAY ? 'perlu' : 'belum'};
+  KEG.push(k); return k;
+}
+function kgModal(id){
+  const k = id ? KEG.find(x => x.id == id) : {tim:'PAUD', nama:'', m:iso(TODAY), s:iso(TODAY), tempat:'', mode:'Luring', rutin:false};
+  $('#modal').innerHTML = `<div class="ov" data-act="ovClose"><form class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" onsubmit="return false" style="max-width:600px">
+    <h3 id="mt">${id ? 'Ubah kegiatan' : 'Tambah kegiatan'}</h3>
+    <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <label class="f">Tim kerja / unit<select id="kgT">${Object.keys(TIM).map(t => `<option value="${t}" ${t===k.tim?'selected':''}>${TIM[t].nama}</option>`).join('')}</select></label>
+      <label class="f">Mode<select id="kgMd">${['Luring','Daring'].map(x => `<option ${x===k.mode?'selected':''}>${x}</option>`).join('')}</select></label>
+    </div>
+    <label class="f">Nama kegiatan<input id="kgN" value="${esc(k.nama)}" placeholder="mis. Bimtek Perencanaan Berbasis Data"></label>
+    <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <label class="f">Tanggal mulai<input type="date" id="kgM" value="${k.m}"></label>
+      <label class="f">Tanggal selesai<input type="date" id="kgS" value="${k.s}"></label>
+    </div>
+    <label class="f">Tempat<input id="kgL" value="${k.tempat === '—' ? '' : esc(k.tempat)}" placeholder="mis. Hotel, Jakarta Pusat / Daring (Zoom)"></label>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="kgR" ${k.rutin?'checked':''} style="width:18px;height:18px">Kegiatan rutin / berkelanjutan (tidak tampil di kalender)</label>
+    <span class="sm">Anggaran (alokasi, realisasi, status) diisi sepenuhnya oleh Admin Keuangan. Perubahan jadwal di sini otomatis tersinkron ke Keuangan.</span>
+    <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="mClose">Batal</button><button class="btn p" data-act="kgSave" data-id="${id || ''}">Simpan kegiatan</button></div>
+  </form></div>`;
+  $('#kgN').focus();
+}
+function vPrcKegiatan(){
+  if(!prcIsAdmin()) return shell('prc','kegiatan',PRC_MENU(), `<div class="card" style="text-align:center;padding:48px"><h2>Khusus Admin Perencanaan</h2><p class="sm">Ganti pilihan “Lihat sebagai” menjadi Admin untuk membuka menu ini.</p></div>`);
+  const imp = KG.pending, xl = !!window.XLSX, order = Object.keys(TIM), tanpaAng = KEG.filter(k => !(k.a > 0)).length;
+  const list = [...KEG].sort((a,b) => order.indexOf(a.tim) - order.indexOf(b.tim) || D(a.m) - D(b.m));
+  return shell('prc','kegiatan',PRC_MENU(), `
+  ${heading(prcCrumb('program kegiatan'), 'Program Kegiatan', '<button class="btn p" data-act="kgAdd">Tambah kegiatan</button>')}
+  <div class="alert info" style="margin-bottom:16px">${svgInfo}<span><b>Tersinkron ke Keuangan.</b> Kegiatan dan jadwal yang disimpan di sini langsung muncul di menu Realisasi, Jadwal, dan Ringkasan Keuangan (${KEG.length} kegiatan). <b>Anggaran tidak diinput di sini</b>: alokasi, realisasi, dan status diisi sepenuhnya oleh Admin Keuangan.</span></div>
+  <div class="card" style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px"><h2 style="margin:0">Impor dari Excel</h2>
+    <p style="margin:0;color:var(--ink2)">Isi program kegiatan tahun berjalan sekaligus, tidak perlu input satu per satu. Kegiatan yang namanya sudah ada pada tim yang sama akan diperbarui jadwalnya, yang belum ada akan ditambahkan.</p>
+    <div class="steps">
+      <div class="step"><div class="k"><i style="background:var(--acc)">1</i>Unduh template</div><div class="acts" style="margin-top:8px"><button class="btn sm" data-act="kgTpl" data-kosong="0">Data saat ini${xl?' (.xlsx)':' (.csv)'}</button><button class="btn sm" data-act="kgTpl" data-kosong="1">Template kosong</button></div></div>
+      <div class="step"><div class="k"><i style="background:var(--acc)">2</i>Isi di Excel</div><div class="sm" style="margin-top:6px">Kolom: Tim Kerja · Nama Kegiatan · Tanggal Mulai · Tanggal Selesai · Tempat · Mode. Jangan ubah judul kolom.</div></div>
+      <div class="step"><div class="k"><i style="background:var(--acc)">3</i>Unggah</div><label class="btn sm p" style="margin-top:8px;cursor:pointer">Pilih file<input type="file" class="hide" data-act="kgFile" accept=".csv,.xlsx,.xls"></label></div>
+    </div>
+    <span class="sm">${xl ? 'Mendukung .xlsx dan .csv.' : 'Mode tanpa internet: gunakan .csv (di Excel: Simpan sebagai → CSV). Impor .xlsx aktif saat terhubung internet.'}</span>
+    ${imp ? (imp.error ? `<div class="alert bad">${svgWarn}<span>${esc(imp.error)}</span></div>` : `
+      <div class="card" style="background:#FBFCFD"><b>Pratinjau impor · ${esc(imp.file)}</b>
+        <div class="sm" style="margin:4px 0 10px">${imp.count} kegiatan terbaca: ${imp.items.filter(x => x.baru).length} baru, ${imp.items.filter(x => !x.baru).length} diperbarui${imp.errors.length ? `, ${imp.errors.length} baris dilewati` : ''}</div>
+        ${imp.errors.length ? `<div class="alert warn" style="margin-bottom:10px">${svgWarn}<span><b>${imp.errors.length} catatan:</b><br>${imp.errors.slice(0,5).map(esc).join('<br>')}${imp.errors.length>5?'<br>…':''}</span></div>` : ''}
+        ${imp.count ? `<div class="tbox" style="margin-bottom:10px"><table class="t" style="min-width:640px"><thead><tr><th>Tim</th><th>Kegiatan</th><th>Tanggal</th><th>Cek</th></tr></thead><tbody>
+          ${imp.items.slice(0,8).map(x => `<tr><td>${x.tim === 'UMUM' ? 'Umum' : x.tim}</td><td>${esc(x.nama)}</td><td class="num" style="white-space:nowrap">${rentang(x.m,x.s)}</td><td><span class="pill ${x.baru?'ok':'info'}">${x.baru?'Baru':'Diperbarui'}</span></td></tr>`).join('')}
+          ${imp.count > 8 ? `<tr><td colspan="4" class="sm" style="text-align:center">… dan ${imp.count - 8} kegiatan lainnya</td></tr>` : ''}</tbody></table></div>` : ''}
+        <div class="acts" style="justify-content:flex-end"><button class="btn" data-act="kgCancel">Batal</button><button class="btn p" data-act="kgApply" ${imp.count?'':'disabled'}>Simpan ${imp.count} kegiatan</button></div>
+      </div>`) : ''}
+  </div>
+  <div class="sec"><h2>Daftar kegiatan ${PRC.year}</h2>
+    <div class="tbox"><table class="t" style="min-width:980px"><thead><tr><th>Tim</th><th>Kegiatan</th><th>Tanggal</th><th>Tempat</th><th>Mode</th><th>Anggaran<div class="sm" style="font-weight:500">diisi Keuangan</div></th><th>Aksi</th></tr></thead><tbody>
+    ${list.map(k => `<tr>
+      <td><span class="tag" style="background:${TIM[k.tim].t};color:${TIM[k.tim].c}">${k.tim === 'UMUM' ? 'Umum' : k.tim}</span></td>
+      <td><b>${esc(k.nama)}</b>${k.rutin ? ' <span class="pill mu">rutin</span>' : ''}${k.resch ? ' <span class="pill warn">dijadwal ulang</span>' : ''}</td>
+      <td class="num" style="white-space:nowrap">${rentang(k.m,k.s)}</td><td>${esc(k.tempat)}</td><td>${k.mode}</td>
+      <td>${k.a > 0 ? '<span class="pill ok">Sudah diisi</span>' : '<span class="pill mu">Menunggu Keuangan</span>'}</td>
+      <td style="white-space:nowrap"><button class="btn sm edit" data-act="kgEdit" data-id="${k.id}">Ubah</button> <button class="btn sm" data-act="kgDel" data-id="${k.id}" style="color:var(--bad)" ${k.r>0?'disabled title="Sudah ada realisasi, tidak dapat dihapus"':''}>Hapus</button></td></tr>`).join('')}
+    <tr class="tot"><td colspan="6">Total ${KEG.length} kegiatan · ${tanpaAng} menunggu pengisian anggaran oleh Keuangan</td><td></td></tr>
+    </tbody></table></div>
+    <p class="sm" style="margin-top:10px">Perubahan jadwal kegiatan di sini ikut tampil di kalender Keuangan dan Perencanaan. Kegiatan yang sudah memiliki realisasi tidak dapat dihapus.</p>
+  </div>`);
 }
 
 /* ---------- KALENDER ---------- */
@@ -1918,6 +2028,25 @@ function prcClick(el, a, e){
       PRC.calM = D(m).getMonth(); PRC.calY = D(m).getFullYear(); PRC.layers.agenda = true;
       closeModal(); rerender(); toast('Agenda tersimpan di kalender'); return true; }
     case 'evDel': AGENDA = AGENDA.filter(x => x.id != el.dataset.id); closeModal(); rerender(); toast('Agenda dihapus'); return true;
+    case 'kgAdd': kgModal(null); return true;
+    case 'kgEdit': kgModal(el.dataset.id); return true;
+    case 'kgSave': {
+      const nama = $('#kgN').value.trim(), m = $('#kgM').value, s = $('#kgS').value || m;
+      if(!nama || !m || s < m){ toast(!nama ? 'Nama kegiatan wajib diisi' : 'Tanggal tidak valid'); return true; }
+      const edit = !!el.dataset.id;
+      kgSetujui({tim:$('#kgT').value, nama, m, s, tempat:$('#kgL').value.trim() || '—', mode:$('#kgMd').value, rutin:$('#kgR').checked}, el.dataset.id);
+      closeModal(); rerender(); toast(edit ? 'Kegiatan diperbarui dan tersinkron ke Keuangan' : 'Kegiatan ditambahkan dan tersinkron ke Keuangan'); return true; }
+    case 'kgDel': { const k = KEG.find(x => x.id == el.dataset.id);
+      if(k.r > 0){ toast('Sudah ada realisasi, kegiatan tidak dapat dihapus'); return true; }
+      if(!confirm('Hapus kegiatan "' + k.nama + '"? Kegiatan' + (k.a > 0 ? ' dan alokasi anggaran yang sudah diisi Keuangan' : '') + ' juga hilang dari dashboard Keuangan.')) return true;
+      KEG = KEG.filter(x => x.id !== k.id); state.confirmed.delete(k.id); rerender(); toast('Kegiatan dihapus dan tersinkron ke Keuangan'); return true; }
+    case 'kgTpl': downloadRows(el.dataset.kosong === '1' ? 'Template_kegiatan_anggaran_kosong' : `Kegiatan_anggaran_${PRC.year}`, kgRows(el.dataset.kosong === '1'), !!window.XLSX); toast('Template diunduh'); return true;
+    case 'kgCancel': KG.pending = null; rerender(); return true;
+    case 'kgApply': { const p = KG.pending; if(!p || !p.count) return true;
+      let baru = 0, ubah = 0;
+      p.items.forEach(x => { const ada = KEG.find(k => k.tim === x.tim && k.nama.trim().toLowerCase() === x.nama.toLowerCase());
+        kgSetujui({tim:x.tim, nama:x.nama, m:x.m, s:x.s, tempat:x.tempat, mode:x.mode}, ada ? ada.id : null); if(ada) ubah++; else baru++; });
+      KG.pending = null; rerender(); toast(`${baru} kegiatan baru, ${ubah} diperbarui. Tersinkron ke Keuangan.`); return true; }
     case 'strukTab': PRC.strukTab = el.dataset.t; rerender(); return true;
     case 'dlCat': PRC.dl.cat = el.dataset.c; rerender(); return true;
     case 'dlDoc': { const d = DOCS.find(x => x.id == el.dataset.id);
@@ -1961,6 +2090,14 @@ function prcChange(el, a){
     case 'bobot': PRC.bobot[el.dataset.k] = parseNum(el.value) || 0; rerender(); return true;
     case 'basis': { const v = parseNum(el.value); PRC.basis[PRC.year][el.dataset.kind][el.dataset.k][+el.dataset.i] = v == null ? null : v/100; rerender(); toast('Basis diperbarui, capaian antara dihitung ulang'); return true; }
     case 'dlYear': PRC.dl.year = el.value; rerender(); return true;
+    case 'kgFile': {
+      const f = el.files[0]; if(!f) return true;
+      const done = rows => { const r = rowsToKeg(rows); r.file = f.name; KG.pending = r; rerender(); };
+      if(/\.xlsx?$/i.test(f.name)){
+        if(!window.XLSX){ KG.pending = {error:'File .xlsx butuh koneksi internet untuk dibaca di mockup ini. Simpan sebagai CSV dari Excel lalu unggah ulang.', file:f.name}; rerender(); return true; }
+        f.arrayBuffer().then(buf => { const wb = XLSX.read(buf, {type:'array'}); const ws = wb.Sheets[wb.SheetNames[0]]; done(XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''})); });
+      } else f.text().then(t => done(parseCSV(t)));
+      return true; }
     case 'impFile': {
       const f = el.files[0]; if(!f) return true;
       const done = rows => { const r = rowsToImport(rows); r.file = f.name; PRC.pendingImport = r; rerender(); };
@@ -2254,7 +2391,7 @@ function klnInput(el, a){
 /* ================= ROUTER ================= */
 const ROUTES = {
   '':vPortal, 'keu':vKeu, 'keu/realisasi':vKeuRealisasi, 'keu/jadwal':vKeuJadwal, 'keu/st':vKeuST, 'keu/unggah':vKeuUnggah, 'keu/format':vKeuFormat,
-  'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/kelola':vPrcKelola, 'kln':vKln, 'kln/obat':vKlnObat
+  'prc':vPrc, 'prc/capaian':vPrcCapaian, 'prc/pengukuran':vPrcPengukuran, 'prc/kalender':vPrcKalender, 'prc/struktur':vPrcStruktur, 'prc/unduh':vPrcUnduh, 'prc/kelola':vPrcKelola, 'prc/kegiatan':vPrcKegiatan, 'kln':vKln, 'kln/obat':vKlnObat
 };
 function route(){
   const h = location.hash.replace(/^#\/?/,'');
